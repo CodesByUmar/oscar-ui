@@ -1,0 +1,80 @@
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Node
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# Environment
+.env
+.env.*
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.swp
+*.swo
+*~
+
+# 🔐 Keys & Credentials (FAQAT MAXFIY JSON)
+*-credentials.json
+*-secret.json
+*-key.json
+firebase-*.json
+payme-*.json
+payme-*.key
+payme-*.pem
+merchant-*.json
+*oscar-d85af-firebase-adminsdk-fbsvc-4f2f71944c.json
+oscar-d85af-firebase-adminsdk-fbsvc-7a6fa6798f.json
+
+# 📦 Package lock (MUHIM: Vercel uchun kerak!)
+# package-lock.json  ← BU YERNI O'CHIRING! (yoki # qo'ying)
+
+# Database
+*.sqlite
+*.db
+dump-*.sql
+
+# Temp
+tmp/
+temp/
+*.tmp
+*.temp
+
+# OS
+Thumbs.db
+desktop.ini
+
+# Test
+coverage/
+.nyc_output/
+test-reports/
+payme-test-*.json
+
+# Backup
+*.backup
+*.bak
+backups/
+*.backup_*.json
+
+# Maxsus fayllar (o'zingiznikilar)
+*transformData.cjs
+*bacupFirestore.cjs
+*uploadToFirestore.cjs
+*backup_*.json

@@ -7,7 +7,8 @@ import { ChevronLeft, Search, X } from "lucide-react";
 import { useState } from "react";
 
 export function CategoryDetail() {
-    const { categoryKey } = useParams<{ categoryKey: string }>();
+    const { categoryKey: rawCategoryKey } = useParams<{ categoryKey: string }>();
+    const categoryKey = rawCategoryKey ? decodeURIComponent(rawCategoryKey) : rawCategoryKey;
     const navigate = useNavigate();
     const { products, isLoading } = useProductStore();
     const t = useI18nStore((s) => s.t);

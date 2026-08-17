@@ -30,7 +30,7 @@ export function Categories() {
   });
 
   const handleCategoryClick = (catKey: string) => {
-    navigate(`/category/${catKey}`);
+    navigate(`/category/${encodeURIComponent(catKey)}`);
   };
 
   return (

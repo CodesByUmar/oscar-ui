@@ -5,6 +5,9 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useProductStore } from "@/store/productStore";
 import { Link } from "react-router-dom";
+import { cyrillicToLatinUz, isCyrillic } from "@/lib/transliterate";
+import { getEffectivePrice } from "@/utils/discount";
+import { useSettingsStore } from "@/store/settingsStore";
 
 interface SearchModalProps {
   open: boolean;
@@ -14,9 +17,26 @@ interface SearchModalProps {
 export function SearchModal({ open, onOpenChange }: SearchModalProps) {
   const [query, setQuery] = useState("");
   const products = useProductStore((state) => state.products);
+  const USD_TO_UZS = useSettingsStore((s) => s.usdRate);
 
-  const results = query.trim().length > 1
-    ? products.filter(p => p.name.toLowerCase().includes(query.toLowerCase()))
+  const trimmedQuery = query.trim();
+  // Agar kirillcha yozilgan bo'lsa, lotinchaga ham o'giramiz — shunda
+  // "сувли бўёқ" deb yozilsa ham, bazadagi "Suvli bo'yoq" (lotin) topiladi.
+  const queryVariants = [trimmedQuery.toLowerCase()];
+  if (isCyrillic(trimmedQuery)) {
+    queryVariants.push(cyrillicToLatinUz(trimmedQuery).toLowerCase());
+  }
+
+  const results = trimmedQuery.length > 1
+    ? products.filter((p) => {
+        const fields = [
+          p.name,
+          p.nameI18n?.uz,
+          p.nameI18n?.ru,
+          p.nameI18n?.en,
+        ].filter(Boolean).map((f) => f!.toLowerCase());
+        return queryVariants.some((q) => fields.some((f) => f.includes(q)));
+      })
     : [];
 
   // Reset query when closed
@@ -80,7 +100,7 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
                   <div className="flex-1 min-w-0 py-1">
                     <h4 className="font-semibold text-slate-800 text-sm truncate">{product.name}</h4>
                     <p className="font-bold text-primary text-sm mt-0.5">
-                      {product.priceBox > 0 ? `${formatUZS(product.priceBox)} UZS` : `$${product.pricePiece}`}
+                      {formatUZS(Math.round(getEffectivePrice(product, product.pricePiece) * USD_TO_UZS))} UZS
                     </p>
                   </div>
                 </Link>

@@ -1357,11 +1357,12 @@ export default function Checkout() {
 
       if (!isVip && paymentMethod === "card") {
         if (paymentProvider === "payme") {
-          // Payme'ning rasmiy checkout havolasi — merchant ID va summa (tiyinda)
-          // base64 qilib kodlanadi, shunda mijoz summani qo'lda kiritmaydi.
-          const amountTiyin = Math.round(finalTotalUZSWithDelivery * 100);
-          const paymeParams = `m=${PAYME_MERCHANT_ID};a=${amountTiyin}`;
-          window.open(`https://checkout.paycom.uz/${btoa(paymeParams)}`, "_blank");
+          // MUHIM: checkout.paycom.uz (to'liq Merchant API) hisobimizda hali
+          // faol emas ("Поставщик не найден или заблокирован" xatosi berdi) —
+          // hozircha faqat QR-chekdagi statik "fallback" havolasi ishlaydi.
+          // Shuning uchun mijozga summani oldindan ko'rsatamiz.
+          alert(`Diqqat: Payme sahifasida ${formatUZS(finalTotalUZSWithDelivery)} so'm summasini kiriting/tasdiqlang.`);
+          window.open(`https://payme.uz/fallback/merchant/?id=${PAYME_MERCHANT_ID}`, "_blank");
         } else if (paymentProvider === "uzum") {
           // MUHIM: Apelsin/UzumPay uchun summani URL orqali uzatish parametri
           // hujjatlashtirilmagan, shuning uchun noto'g'ri taxmin qilmaslik uchun

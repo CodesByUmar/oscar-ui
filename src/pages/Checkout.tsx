@@ -896,9 +896,8 @@ function YandexPickerMap({
   return <div ref={containerRef} style={{ width: "100%", height: "100%" }} />;
 }
 
-// Haqiqiy do'kon QR-chеklaridan olingan merchant ID'lar (Payme va UzumPay).
+// Haqiqiy do'kon QR-chekidan olingan Payme merchant ID.
 const PAYME_MERCHANT_ID = "660d234690823bcdf98bebe5";
-const APELSIN_SERVICE_ID = "498609633";
 
 // MUHIM: Telegram Mini App ichida oddiy window.open("_blank") ko'pincha
 // jim (silent) bloklanadi — WebView popup'larni ruxsatsiz to'xtatadi,
@@ -1095,7 +1094,9 @@ export default function Checkout() {
   }, []);
 
   const [paymentMethod, setPaymentMethod] = useState<"cash" | "card">("cash");
-  const [paymentProvider, setPaymentProvider] = useState<"payme" | "uzum" | null>(null);
+  // Hozircha faqat Payme faol (Uzum'ning to'lov sahifasi karta bilan emas,
+  // faqat Uzum Bank ilovasi orqali QR skanerlashni talab qiladi — vaqtincha o'chirilgan).
+  const [paymentProvider, setPaymentProvider] = useState<"payme" | null>(null);
 
   const [deliveryMethod, setDeliveryMethod] = useState<"delivery" | "pickup">("delivery");
   const [deliveryFeeData, setDeliveryFeeData] = useState<{ fee: number; isFree: boolean; reason: string; distanceKm: number | null }>({ fee: 0, isFree: false, reason: '', distanceKm: null });
@@ -1377,12 +1378,6 @@ export default function Checkout() {
           // Shuning uchun mijozga summani oldindan ko'rsatamiz.
           alert(`Diqqat: Payme sahifasida ${formatUZS(finalTotalUZSWithDelivery)} so'm summasini kiriting/tasdiqlang.`);
           openExternalLink(`https://payme.uz/fallback/merchant/?id=${PAYME_MERCHANT_ID}`);
-        } else if (paymentProvider === "uzum") {
-          // MUHIM: Apelsin/UzumPay uchun summani URL orqali uzatish parametri
-          // hujjatlashtirilmagan, shuning uchun noto'g'ri taxmin qilmaslik uchun
-          // mijozga to'lanadigan aniq summani oldindan ko'rsatamiz.
-          alert(`Diqqat: keyingi sahifada ${formatUZS(finalTotalUZSWithDelivery)} so'm summasini kiriting/tasdiqlang.`);
-          openExternalLink(`https://payment.apelsin.uz/merchant?serviceId=${APELSIN_SERVICE_ID}`);
         }
       }
     } catch (error) {
@@ -1590,31 +1585,23 @@ export default function Checkout() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setPaymentMethod("card")}
+                    onClick={() => {
+                      setPaymentMethod("card");
+                      // Hozircha faqat Payme faol (Uzum vaqtincha o'chirilgan) —
+                      // tanlov ekranini ko'rsatmaslik uchun avtomatik belgilaymiz.
+                      setPaymentProvider("payme");
+                    }}
                     className={`h-12 rounded-xl font-bold text-sm transition-all border-2 flex items-center justify-center gap-2 ${paymentMethod === "card" ? 'border-primary bg-primary/5 text-primary' : 'border-slate-100 text-slate-500 hover:bg-slate-50'}`}
                   >
                     {t('checkout.card')}
                   </button>
                 </div>
 
-                {/* Payment Providers */}
-                <div className={`overflow-hidden transition-all duration-300 ${paymentMethod === 'card' ? 'max-h-40 opacity-100 mt-4' : 'max-h-0 opacity-0 mt-0'}`}>
+                {/* Payment Provider — hozircha faqat Payme */}
+                <div className={`overflow-hidden transition-all duration-300 ${paymentMethod === 'card' ? 'max-h-20 opacity-100 mt-4' : 'max-h-0 opacity-0 mt-0'}`}>
                   <p className="text-xs font-bold text-slate-500 ml-1 mb-2 block uppercase tracking-wider">{t('checkout.payment_system')}</p>
-                  <div className="grid grid-cols-2 gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setPaymentProvider("payme")}
-                      className={`h-14 rounded-xl font-bold transition-all border-2 flex items-center justify-center overflow-hidden ${paymentProvider === "payme" ? 'border-[#33cccc] bg-[#33cccc]/10' : 'border-slate-100 hover:bg-slate-50'}`}
-                    >
-                      <span className="text-[#33cccc] font-black text-lg tracking-wide">Payme</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setPaymentProvider("uzum")}
-                      className={`h-14 rounded-xl font-bold transition-all border-2 flex items-center justify-center overflow-hidden ${paymentProvider === "uzum" ? 'border-[#5c00e6] bg-[#5c00e6]/10' : 'border-slate-100 hover:bg-slate-50'}`}
-                    >
-                      <span className="text-[#5c00e6] font-black text-lg tracking-wide">Uzum</span>
-                    </button>
+                  <div className="h-14 rounded-xl font-bold border-2 border-[#33cccc] bg-[#33cccc]/10 flex items-center justify-center overflow-hidden">
+                    <span className="text-[#33cccc] font-black text-lg tracking-wide">Payme</span>
                   </div>
                 </div>
               </>

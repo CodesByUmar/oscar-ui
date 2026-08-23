@@ -5,6 +5,7 @@ import { ProductCard } from "@/features/products/ProductCard";
 import { useI18nStore } from "@/store/i18nStore";
 import { ChevronLeft, Search, X } from "lucide-react";
 import { useState } from "react";
+import { cyrillicToLatinUz, isCyrillic } from "@/lib/transliterate";
 
 export function AllProducts() {
     const navigate = useNavigate();
@@ -13,11 +14,18 @@ export function AllProducts() {
     const lang = useI18nStore((s) => s.lang);
     const [searchQuery, setSearchQuery] = useState("");
 
+    const trimmedQuery = searchQuery.trim();
+    const queryVariants = [trimmedQuery.toLowerCase()];
+    if (isCyrillic(trimmedQuery)) {
+        queryVariants.push(cyrillicToLatinUz(trimmedQuery).toLowerCase());
+    }
+
     const filteredProducts = products.filter((p) => {
-        if (searchQuery.trim() === "") return true;
-        const name = (p.nameI18n?.[lang] || p.name).toLowerCase();
-        const desc = (p.descriptionI18n?.[lang] || p.description || "").toLowerCase();
-        return name.includes(searchQuery.toLowerCase()) || desc.includes(searchQuery.toLowerCase());
+        if (trimmedQuery === "") return true;
+        const fields = [p.name, p.nameI18n?.uz, p.nameI18n?.ru, p.nameI18n?.en, p.description, p.descriptionI18n?.uz]
+            .filter(Boolean)
+            .map((f) => f!.toLowerCase());
+        return queryVariants.some((q) => fields.some((f) => f.includes(q)));
     });
 
     return (

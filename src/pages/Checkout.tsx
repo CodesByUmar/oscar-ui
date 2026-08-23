@@ -831,49 +831,71 @@ import { useCartStore } from "@/store/cartStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { APIProvider, Map, useMap, useMapsLibrary } from "@vis.gl/react-google-maps";
 import { addDoc, collection } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { STORE_LOCATION, estimateRoadDistance, calculateDeliveryFee } from "@/lib/delivery";
 import { useSettingsStore } from "@/store/settingsStore";
 import { useI18nStore } from "@/store/i18nStore";
 import { useAuth } from "../context/AuthContext";
+import { loadYandexMaps, yandexReverseGeocode, yandexForwardGeocode } from "@/lib/yandexMaps";
 
-
-function LocationMap({
+// Markazda sobit pin turadigan, xarita ostida siljiydigan Yandex xaritasi
+// (Google Maps'dagi bilan bir xil UX naqsh — faqat dvigatel almashtirildi).
+function YandexPickerMap({
   mapCenter,
   onIdle,
   onMapLoad,
 }: {
   mapCenter: { lat: number; lng: number };
-  onIdle: () => void;
+  onIdle: (center: { lat: number; lng: number }) => void;
   onMapLoad: (map: any) => void;
 }) {
-  const map = useMap();
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const mapInstanceRef = useRef<any>(null);
+  const onIdleRef = useRef(onIdle);
+  onIdleRef.current = onIdle;
 
   useEffect(() => {
-    if (map) {
-      onMapLoad(map);
-    }
-  }, [map, onMapLoad]);
+    let cancelled = false;
+    const apiKey = import.meta.env.VITE_YANDEX_MAPS_API_KEY as string | undefined;
+
+    loadYandexMaps(apiKey || "")
+      .then((ymaps) => {
+        if (cancelled || !containerRef.current) return;
+        const map = new ymaps.Map(
+          containerRef.current,
+          { center: [mapCenter.lat, mapCenter.lng], zoom: 15, controls: [] },
+          { suppressMapOpenBlock: true }
+        );
+        mapInstanceRef.current = map;
+        onMapLoad(map);
+
+        map.events.add("actionend", () => {
+          const center = map.getCenter(); // [lat, lng]
+          onIdleRef.current({ lat: center[0], lng: center[1] });
+        });
+      })
+      .catch((err) => console.error("Yandex Maps yuklashda xato:", err));
+
+    return () => {
+      cancelled = true;
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.destroy();
+        mapInstanceRef.current = null;
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
-    if (map) {
-      map.panTo(mapCenter);
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.panTo([mapCenter.lat, mapCenter.lng], { flying: false });
     }
-  }, [map, mapCenter]);
+  }, [mapCenter]);
 
-  return (
-    <Map
-      defaultCenter={mapCenter}
-      defaultZoom={15}
-      style={{ width: "100%", height: "100%" }}
-      gestureHandling="greedy"
-      disableDefaultUI={true}
-      onIdle={onIdle}
-    />
-  );
+  return <div ref={containerRef} style={{ width: "100%", height: "100%" }} />;
 }
+
 // Phone formatter
 const formatPhoneNumber = (value: string) => {
   const digits = value.replace(/\D/g, "");
@@ -1072,7 +1094,6 @@ export default function Checkout() {
   const [tempLocation, setTempLocation] = useState<LocationData>({ lat: null, lng: null, address: "" });
 
   const mapRef = useRef<any>(null);
-  const geocoderRef = useRef<any>(null);
   const geocodeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastFetchedCenterRef = useRef<{ lat: number; lng: number } | null>(null);
 
@@ -1100,47 +1121,31 @@ export default function Checkout() {
     }
   }, [formData.location.lat, formData.location.lng, totalUSD, deliveryMethod]);
 
-  // Initialize Geocoder
-  const geocodingLib = useMapsLibrary("geocoding");
-
+  // Viloyat/tuman tanlanganda xarita markazini o'sha joyga ko'chirish
+  // (Yandex Geocoder, topilmasa OSM Nominatim'ga fallback).
   useEffect(() => {
-    if (geocodingLib && !geocoderRef.current) {
-      geocoderRef.current = new geocodingLib.Geocoder();
-    }
-  }, [geocodingLib]);
-
-  // Update map center when region/district changes
-  useEffect(() => {
-    if (!geocoderRef.current || !formData.region) return;
+    if (!formData.region) return;
 
     const query = formData.district
       ? `${formData.region}, ${formData.district}`
       : formData.region;
 
-    geocoderRef.current.geocode({ address: query }, async (results: any, status: any) => {
-      if (status === "OK" && results && results[0]) {
-        const location = results[0].geometry.location;
-        const coords = { lat: location.lat(), lng: location.lng() };
+    (async () => {
+      const coords = await yandexForwardGeocode(`${query}, O'zbekiston`);
+      if (coords) {
         setMapCenter(coords);
-        if (mapRef.current) {
-          mapRef.current.panTo(coords);
-        }
-      } else {
-        try {
-          const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query + ', Uzbekistan')}`);
-          const data = await res.json();
-          if (data && data.length > 0) {
-            const coords = { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
-            setMapCenter(coords);
-            if (mapRef.current) {
-              mapRef.current.panTo(coords);
-            }
-          }
-        } catch (e) {
-          console.error("OSM Fallback failed:", e);
-        }
+        return;
       }
-    });
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query + ', Uzbekistan')}`);
+        const data = await res.json();
+        if (data && data.length > 0) {
+          setMapCenter({ lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) });
+        }
+      } catch (e) {
+        console.error("OSM Fallback failed:", e);
+      }
+    })();
   }, [formData.region, formData.district]);
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1151,39 +1156,33 @@ export default function Checkout() {
     setFormData({ ...formData, phone: formatPhoneNumber(val) });
   };
 
-  const fetchAddress = useCallback((lat: number, lng: number) => {
-    if (!geocoderRef.current) return;
+  const fetchAddress = useCallback(async (lat: number, lng: number) => {
     setIsGeocoding(true);
 
-    geocoderRef.current.geocode({ location: { lat, lng } }, async (results: any, status: any) => {
-      if (status === "OK" && results && results[0]) {
-        const address = results[0].formatted_address;
-        setTempLocation({ lat, lng, address });
-        setIsGeocoding(false);
+    const address = await yandexReverseGeocode(lat, lng);
+    if (address) {
+      setTempLocation({ lat, lng, address });
+      setIsGeocoding(false);
+      return;
+    }
+
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`);
+      const data = await res.json();
+      if (data && data.display_name) {
+        setTempLocation({ lat, lng, address: data.display_name });
       } else {
-        try {
-          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`);
-          const data = await res.json();
-          if (data && data.display_name) {
-            setTempLocation({ lat, lng, address: data.display_name });
-          } else {
-            setTempLocation(prev => ({ ...prev, lat, lng, address: "Manzil topilmadi" }));
-          }
-        } catch (err) {
-          setTempLocation(prev => ({ ...prev, lat, lng, address: "Manzil topilmadi" }));
-        }
-        setIsGeocoding(false);
+        setTempLocation(prev => ({ ...prev, lat, lng, address: "Manzil topilmadi" }));
       }
-    });
+    } catch (err) {
+      setTempLocation(prev => ({ ...prev, lat, lng, address: "Manzil topilmadi" }));
+    }
+    setIsGeocoding(false);
   }, []);
 
-  const handleIdle = useCallback(() => {
-    if (!mapRef.current) return;
-    const center = mapRef.current.getCenter();
-    if (!center) return;
-
-    const lat = center.lat();
-    const lng = center.lng();
+  // Yandex xaritasi pan/zoom tugagach shu funksiyani {lat,lng} bilan chaqiradi.
+  const handleIdle = useCallback((center: { lat: number; lng: number }) => {
+    const { lat, lng } = center;
 
     if (lastFetchedCenterRef.current) {
       const latDiff = Math.abs(lastFetchedCenterRef.current.lat - lat);
@@ -1209,14 +1208,11 @@ export default function Checkout() {
     setIsMapOpen(true);
 
     setTimeout(() => {
-      if (mapRef.current) {
-        const center = mapRef.current.getCenter();
-        if (center) {
-          fetchAddress(center.lat(), center.lng());
-        }
-      } else if (formData.location.lat && formData.location.lng) {
-        setMapCenter({ lat: formData.location.lat, lng: formData.location.lng });
-      }
+      const center = formData.location.lat && formData.location.lng
+        ? { lat: formData.location.lat, lng: formData.location.lng }
+        : mapCenter;
+      setMapCenter(center);
+      fetchAddress(center.lat, center.lng);
     }, 500);
   };
 
@@ -1706,23 +1702,13 @@ export default function Checkout() {
 
           {/* Map Container */}
           <div className="flex-1 relative bg-slate-100 overflow-hidden">
-          // YANGI:
-            <APIProvider apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}>
-              <Map
-                defaultCenter={mapCenter}
-                defaultZoom={15}
-                style={{ width: "100%", height: "100%" }}
-                gestureHandling="greedy"
-                disableDefaultUI={true}
-                onIdle={handleIdle}
-                onCameraChanged={(ev) => {
-                  // mapRef ni saqlab qo'yamiz
-                  if (ev.map) {
-                    mapRef.current = ev.map;
-                  }
-                }}
-              />
-            </APIProvider>
+            <YandexPickerMap
+              mapCenter={mapCenter}
+              onIdle={handleIdle}
+              onMapLoad={(map) => {
+                mapRef.current = map;
+              }}
+            />
 
             {/* Center Pin Overlay */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[100%] pointer-events-none drop-shadow-xl z-10 pb-1">

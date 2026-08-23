@@ -71,7 +71,7 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 no-scrollbar">
+        <div className="flex-1 overflow-y-auto p-4 thin-scrollbar">
           {query.trim().length <= 1 ? (
             <div className="py-12 text-center text-slate-400 flex flex-col items-center">
               <Search className="w-12 h-12 mb-3 text-slate-200" />

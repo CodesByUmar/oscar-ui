@@ -54,7 +54,7 @@ export function Categories() {
           <div className="grid grid-cols-2 gap-3">
             {/* Barcha mahsulotlar */}
             <div
-              onClick={() => navigate('/')}
+              onClick={() => navigate('/all-products')}
               className="col-span-2 bg-gradient-to-br from-primary to-primary/80 rounded-3xl p-5 shadow-lg cursor-pointer active:scale-[0.98] transition-all group flex items-center justify-between"
             >
               <div className="flex items-center gap-4">

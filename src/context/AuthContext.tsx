@@ -1,6 +1,9 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { collection, doc, getDoc, getDocs, query, where } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+
+// MUHIM: VIP login/parol endi Firestore'dan to'g'ridan-to'g'ri o'qilmaydi —
+// Firestore qoidalari buni taqiqlaydi. Parol tekshiruvi admin-bot serverida
+// (Admin SDK bilan) bajariladi, bu yerda faqat shu API chaqiriladi.
+const ADMIN_API_URL = import.meta.env.VITE_ADMIN_API_URL as string;
 
 interface AuthUser {
     uid: string;
@@ -42,9 +45,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             if (saved) {
                 try {
                     const parsedUser: AuthUser = JSON.parse(saved);
-                    // Hali ham VIP ekanini Firestore'dan tasdiqlaymiz (o'chirilgan bo'lishi mumkin)
-                    const vipDoc = await getDoc(doc(db, "VIP_Clients", parsedUser.uid));
-                    if (vipDoc.exists()) {
+                    // Hali ham VIP ekanini serverdan tasdiqlaymiz (o'chirilgan bo'lishi mumkin)
+                    const res = await fetch(`${ADMIN_API_URL}/api/vip-check/${parsedUser.uid}`);
+                    if (res.ok) {
                         setUser(parsedUser);
                         setLoading(false);
                         return;
@@ -62,9 +65,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
             if (tgUser) {
                 try {
-                    const vipDoc = await getDoc(doc(db, "VIP_Clients", String(tgUser.id)));
-                    if (vipDoc.exists()) {
-                        const data = vipDoc.data();
+                    const res = await fetch(`${ADMIN_API_URL}/api/vip-check/${tgUser.id}`);
+                    if (res.ok) {
+                        const { user: data } = await res.json();
                         setUser({
                             uid: String(tgUser.id),
                             email: "",
@@ -93,25 +96,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             throw new Error("Login va parolni kiriting");
         }
 
-        const q = query(
-            collection(db, "VIP_Clients"),
-            where("login", "==", trimmedLogin)
-        );
-        const snap = await getDocs(q);
+        const res = await fetch(`${ADMIN_API_URL}/api/vip-login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ login: trimmedLogin, password }),
+        });
 
-        if (snap.empty) {
+        if (!res.ok) {
             throw new Error("Login yoki parol noto'g'ri");
         }
 
-        const vipDoc = snap.docs[0];
-        const data = vipDoc.data();
-
-        if (data.password !== password) {
-            throw new Error("Login yoki parol noto'g'ri");
-        }
+        const { user: data } = await res.json();
 
         const vipUser: AuthUser = {
-            uid: vipDoc.id,
+            uid: data.uid,
             email: "",
             login: data.login || trimmedLogin,
             username: data.username || data.login || "VIP User",

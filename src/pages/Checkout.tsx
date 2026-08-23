@@ -1093,6 +1093,7 @@ export default function Checkout() {
   const [isGeocoding, setIsGeocoding] = useState(false);
   const [tempLocation, setTempLocation] = useState<LocationData>({ lat: null, lng: null, address: "" });
 
+  const [isLocating, setIsLocating] = useState(false);
   const mapRef = useRef<any>(null);
   const geocodeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastFetchedCenterRef = useRef<{ lat: number; lng: number } | null>(null);
@@ -1199,10 +1200,31 @@ export default function Checkout() {
     if (geocodeTimeoutRef.current) clearTimeout(geocodeTimeoutRef.current);
     setIsGeocoding(true);
 
+    // MUHIM: avval 6000ms edi — foydalanuvchi juda uzoq kutishga majbur bo'lardi.
     geocodeTimeoutRef.current = setTimeout(() => {
       fetchAddress(lat, lng);
-    }, 6000);
+    }, 700);
   }, [fetchAddress]);
+
+  // Foydalanuvchining haqiqiy joylashuvini olib, xaritani o'sha yerga ko'chirish.
+  const handleUseMyLocation = () => {
+    if (!navigator.geolocation) {
+      alert("Bu qurilmada joylashuvni aniqlash imkoniyati yo'q.");
+      return;
+    }
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setMapCenter({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setIsLocating(false);
+      },
+      () => {
+        setIsLocating(false);
+        alert("Joylashuvni aniqlab bo'lmadi. Iltimos, ruxsat bering yoki xaritadan qo'lda tanlang.");
+      },
+      { enableHighAccuracy: true, timeout: 8000 }
+    );
+  };
 
   const openMap = () => {
     setIsMapOpen(true);
@@ -1717,6 +1739,20 @@ export default function Checkout() {
                 <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-3 h-1.5 bg-black/20 rounded-[100%] blur-[2px]" />
               </div>
             </div>
+
+            {/* Mening joylashuvim tugmasi */}
+            <button
+              type="button"
+              onClick={handleUseMyLocation}
+              disabled={isLocating}
+              className="absolute bottom-4 right-4 z-10 w-11 h-11 bg-white shadow-lg border border-slate-100 rounded-full flex items-center justify-center text-primary active:scale-90 transition-transform disabled:opacity-60"
+            >
+              {isLocating ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <Navigation className="w-5 h-5" />
+              )}
+            </button>
           </div>
 
           {/* Bottom Sheet Action */}

@@ -900,6 +900,20 @@ function YandexPickerMap({
 const PAYME_MERCHANT_ID = "660d234690823bcdf98bebe5";
 const APELSIN_SERVICE_ID = "498609633";
 
+// MUHIM: Telegram Mini App ichida oddiy window.open("_blank") ko'pincha
+// jim (silent) bloklanadi — WebView popup'larni ruxsatsiz to'xtatadi,
+// ayniqsa await'lardan keyin chaqirilganda (foydalanuvchi gesture
+// zanjiri uzilgan hisoblanadi). Telegram'ning o'z Telegram.WebApp.openLink()
+// funksiyasi esa buni to'g'ri, tizim brauzerida ochadi.
+function openExternalLink(url: string) {
+  const tg = (window as any).Telegram?.WebApp;
+  if (tg?.openLink) {
+    tg.openLink(url);
+  } else {
+    window.open(url, "_blank");
+  }
+}
+
 // Phone formatter
 const formatPhoneNumber = (value: string) => {
   const digits = value.replace(/\D/g, "");
@@ -1362,13 +1376,13 @@ export default function Checkout() {
           // hozircha faqat QR-chekdagi statik "fallback" havolasi ishlaydi.
           // Shuning uchun mijozga summani oldindan ko'rsatamiz.
           alert(`Diqqat: Payme sahifasida ${formatUZS(finalTotalUZSWithDelivery)} so'm summasini kiriting/tasdiqlang.`);
-          window.open(`https://payme.uz/fallback/merchant/?id=${PAYME_MERCHANT_ID}`, "_blank");
+          openExternalLink(`https://payme.uz/fallback/merchant/?id=${PAYME_MERCHANT_ID}`);
         } else if (paymentProvider === "uzum") {
           // MUHIM: Apelsin/UzumPay uchun summani URL orqali uzatish parametri
           // hujjatlashtirilmagan, shuning uchun noto'g'ri taxmin qilmaslik uchun
           // mijozga to'lanadigan aniq summani oldindan ko'rsatamiz.
           alert(`Diqqat: keyingi sahifada ${formatUZS(finalTotalUZSWithDelivery)} so'm summasini kiriting/tasdiqlang.`);
-          window.open(`https://payment.apelsin.uz/merchant?serviceId=${APELSIN_SERVICE_ID}`, "_blank");
+          openExternalLink(`https://payment.apelsin.uz/merchant?serviceId=${APELSIN_SERVICE_ID}`);
         }
       }
     } catch (error) {

@@ -20,20 +20,12 @@ export function ProductCard({ product }: ProductCardProps) {
   const hasDiscount = isDiscountActive(product);
   const discountPercent = product.discount || 0;
 
+  // Kartochkada har doim DONA narxi ko'rsatiladi (savatga qo'shish tugmasi ham
+  // pricePiece'dan foydalanadi) — mahsulot tafsiloti sahifasidagi "Dona" bilan bir xil hisoblash.
   const USD_TO_UZS = useSettingsStore((s) => s.usdRate);
-  const isUSD = product.priceBox === 0;
-  const originalPriceBase = isUSD ? product.pricePiece : product.priceBox;
-  const computedPriceBase = getEffectivePrice(product, originalPriceBase);
-
-  let originalPriceUZS: number, computedPriceUZS: number;
-
-  if (isUSD) {
-    originalPriceUZS = Math.round(originalPriceBase * USD_TO_UZS);
-    computedPriceUZS = Math.round(computedPriceBase * USD_TO_UZS);
-  } else {
-    originalPriceUZS = originalPriceBase;
-    computedPriceUZS = computedPriceBase;
-  }
+  const computedPriceUSD = getEffectivePrice(product, product.pricePiece);
+  const originalPriceUZS = Math.round(product.pricePiece * USD_TO_UZS);
+  const computedPriceUZS = Math.round(computedPriceUSD * USD_TO_UZS);
 
   const displayTitle = product.nameI18n
     ? resolveI18n(product.nameI18n, lang, product.name)
@@ -75,8 +67,13 @@ export function ProductCard({ product }: ProductCardProps) {
 
           {/* DISCOUNT DATE BADGE (TOP OVER IMAGE) */}
           {hasDiscount && finalStart && finalEnd && (
-            <div className="absolute top-2 left-2 bg-blue-100 text-slate-800 rounded-full px-2.5 py-1 text-[10px] sm:text-xs font-bold shadow-sm whitespace-nowrap z-10">
+            <div className="absolute top-2 left-2 bg-primary/10 text-primary rounded-full px-2.5 py-1 text-[10px] sm:text-xs font-bold shadow-sm whitespace-nowrap z-10">
               {finalStart}–{finalEnd}
+            </div>
+          )}
+          {hasDiscount && (
+            <div className="absolute top-2 right-2 bg-red-500 text-white rounded-full px-2 py-1 text-[10px] sm:text-xs font-bold shadow-sm z-10">
+              -{discountPercent}%
             </div>
           )}
 
@@ -98,8 +95,16 @@ export function ProductCard({ product }: ProductCardProps) {
             </h3>
           </div>
 
-          <div className="mt-auto flex items-end justify-between pr-12 pb-1">
-            <p className="font-semibold text-slate-400 text-[11px] sm:text-[12px] leading-none tracking-wide">
+          <div className="mt-auto pr-12 pb-1">
+            {hasDiscount && (
+              <p className="text-slate-400 text-[11px] line-through leading-none mb-0.5">
+                {formatUZS(originalPriceUZS)} UZS
+              </p>
+            )}
+            <p className="font-extrabold text-slate-900 text-[15px] sm:text-[16px] leading-none tracking-tight">
+              {formatUZS(computedPriceUZS)} <span className="text-[11px] font-bold text-slate-500">UZS</span>
+            </p>
+            <p className="font-medium text-slate-400 text-[10px] sm:text-[11px] leading-none tracking-wide mt-1">
               {product.priceBox > 0 && product.pricePiece > 0
                 ? `≈ ${getEffectivePrice(product, product.pricePiece).toFixed(2)} / ${lang === 'uz' ? 'dona' : (lang === 'ru' ? 'шт' : 'item')}`
                 : (product.priceBox > 0 ? (lang === 'uz' ? 'karobka' : (lang === 'ru' ? 'коробка' : 'box')) : (lang === 'uz' ? 'dona' : (lang === 'ru' ? 'шт' : 'item')))}

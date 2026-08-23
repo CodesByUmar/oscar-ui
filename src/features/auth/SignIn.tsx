@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ChevronLeft, LogIn } from "lucide-react";
+import { ChevronLeft, LogIn, Crown } from "lucide-react";
 import { useI18nStore } from "@/store/i18nStore";
 
 export function SignIn() {
@@ -49,7 +49,7 @@ export function SignIn() {
                     <div className="bg-white p-8 rounded-3xl shadow-lg border border-slate-100">
                         <div className="text-center mb-8">
                             <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <span className="text-4xl">👑</span>
+                                <Crown className="w-9 h-9 text-primary" strokeWidth={1.75} />
                             </div>
                             <h2 className="text-2xl font-bold text-slate-800">{t('signin.subtitle')}</h2>
                             <p className="text-slate-500 text-sm mt-2">{t('signin.desc')}</p>

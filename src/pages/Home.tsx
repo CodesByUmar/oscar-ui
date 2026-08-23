@@ -108,12 +108,10 @@
 // }
 
 
-import { useState } from "react";
 import { Header } from "@/features/header/Header";
+import { BannerCarousel } from "@/features/products/BannerCarousel";
 import { DiscountCarousel } from "@/features/products/DiscountCarousel";
 import { FeaturedCarousel } from "@/features/products/FeaturedCarousel";
-import { CategoryModal } from "@/features/categories/CategoryModal";
-import { CategoryCarousel } from "@/features/categories/CategoryCarousel";
 import { ProductCard } from "@/features/products/ProductCard";
 import { useCategoryStore } from "@/store/categoryStore";
 import { useProductStore } from "@/store/productStore";
@@ -121,7 +119,6 @@ import { useI18nStore } from "@/store/i18nStore";
 import { useAuth } from "@/context/AuthContext";
 
 export function Home() {
-  const [modalOpen, setModalOpen] = useState(false);
   const selectedCategory = useCategoryStore((state) => state.selectedCategory);
   const { products, isLoading, error } = useProductStore();
   const t = useI18nStore((s) => s.t);
@@ -148,10 +145,11 @@ export function Home() {
       {isTelegram && isVip && (
         <div className="container max-w-2xl mx-auto px-4 pt-2">
           <button
-            className="w-full bg-gradient-to-r from-yellow-400 to-amber-500 text-white font-bold py-3 rounded-2xl shadow-lg shadow-yellow-200"
+            className="w-full bg-slate-900 text-white font-semibold py-3.5 rounded-2xl border border-vip/40 flex items-center justify-center gap-2 hover:bg-slate-800 active:scale-[0.99] transition-all"
             onClick={() => alert("VIP sahifasi")}
           >
-            ⭐ VIP KIRISH
+            <span className="text-vip text-base leading-none">★</span>
+            <span className="text-sm tracking-wide">VIP KIRISH</span>
           </button>
         </div>
       )}
@@ -160,13 +158,15 @@ export function Home() {
 
         {!selectedCategory && (
           <section className="mb-4">
-            <DiscountCarousel />
+            <BannerCarousel />
           </section>
         )}
 
-        <section className="mb-2 relative z-10">
-          <CategoryCarousel onOpenModal={() => setModalOpen(true)} />
-        </section>
+        {!selectedCategory && (
+          <section className="mb-4">
+            <DiscountCarousel />
+          </section>
+        )}
 
         {!selectedCategory && (
           <section className="mb-8">
@@ -230,7 +230,6 @@ export function Home() {
         </section>
       </main>
 
-      <CategoryModal open={modalOpen} onOpenChange={setModalOpen} />
     </div>
   );
 }

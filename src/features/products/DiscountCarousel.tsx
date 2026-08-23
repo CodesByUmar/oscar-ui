@@ -1,8 +1,8 @@
-import { Link } from "react-router-dom";
 import { useEffect, useRef } from "react";
 import { useProductStore } from "@/store/productStore";
-import { isDiscountActive, getEffectivePrice } from "@/utils/discount";
+import { isDiscountActive } from "@/utils/discount";
 import { useI18nStore } from "@/store/i18nStore";
+import { ProductCard } from "@/features/products/ProductCard";
 
 export function DiscountCarousel() {
   const products = useProductStore((state) => state.products);
@@ -48,52 +48,11 @@ export function DiscountCarousel() {
         ref={scrollerRef}
         className="flex w-full overflow-x-auto no-scrollbar snap-x snap-mandatory px-4 pb-6 gap-4"
       >
-        {discountProducts.map((product) => {
-          const originalPriceUsd = product.pricePiece;
-          const discountedPriceUsd = parseFloat(getEffectivePrice(product, originalPriceUsd).toFixed(2));
-
-          return (
-            <Link
-              key={`discount-${product.id}`}
-              to={`/product/${product.id}`}
-              className="flex-shrink-0 snap-center w-[85vw] max-w-[320px] rounded-3xl bg-white shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-slate-50/50 p-4 transition-all duration-300 hover:shadow-[0_8px_30px_rgb(200,0,0,0.08)] hover:-translate-y-1 block relative overflow-hidden"
-            >
-              <div className="aspect-[16/9] w-full relative mb-4 overflow-hidden rounded-2xl from-slate-100 to-white flex items-center justify-center p-4">
-                {product.discount && (
-                  <div className="absolute bottom-2 left-2 bg-red-500 text-white font-black px-2 py-0.5 rounded-lg text-[11px] shadow-sm z-10">
-                    -{product.discount}%
-                  </div>
-                )}
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="object-contain h-full w-full transition-transform duration-500 hover:scale-110"
-                  onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.classList.remove('hidden') }}
-                />
-                <div className="hidden absolute inset-0 bg-slate-200"></div>
-              </div>
-
-              <div className="space-y-1.5 flex flex-col justify-between px-1">
-                <h3 className="font-semibold text-slate-700 line-clamp-1 text-sm md:text-base leading-snug">
-                  {product.name}
-                </h3>
-                <div className="flex flex-col gap-0.5 pt-1">
-                  <div className="flex items-center gap-2">
-                    <p className="font-extrabold text-red-600 text-base md:text-lg tracking-tight leading-none">
-                      {discountedPriceUsd}
-                    </p>
-                    <p className="font-semibold text-slate-400 text-xs md:text-sm line-through leading-none">
-                      {originalPriceUsd}
-                    </p>
-                  </div>
-                  <p className="font-semibold text-slate-400 text-[11px] leading-none tracking-wide mt-1">
-                    {t('discountCarousel.piece')}
-                  </p>
-                </div>
-              </div>
-            </Link>
-          );
-        })}
+        {discountProducts.map((product) => (
+          <div key={`discount-${product.id}`} className="flex-shrink-0 snap-start w-[46vw] max-w-[190px]">
+            <ProductCard product={product} />
+          </div>
+        ))}
       </div>
     </div>
   );

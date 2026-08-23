@@ -2,7 +2,7 @@
 import { Header } from "@/features/header/Header";
 import { useProductStore } from "@/store/productStore";
 import { useI18nStore } from "@/store/i18nStore";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, LayoutGrid, Package } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export function Categories() {
@@ -41,9 +41,9 @@ export function Categories() {
         <h2 className="text-2xl font-bold text-slate-800 mb-6 px-2">{t('nav.catalog')}</h2>
 
         {isLoading ? (
-          <div className="space-y-3 animate-pulse">
-            {[1, 2, 3, 4, 5].map(i => (
-              <div key={i} className="bg-white rounded-2xl p-4 h-24 border border-slate-100"></div>
+          <div className="grid grid-cols-2 gap-3 animate-pulse">
+            {[1, 2, 3, 4, 5, 6].map(i => (
+              <div key={i} className="bg-white rounded-3xl p-3 h-[168px] border border-slate-100"></div>
             ))}
           </div>
         ) : error ? (
@@ -51,57 +51,48 @@ export function Categories() {
             {t('home.system_error')}: {error}
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
             {/* Barcha mahsulotlar */}
             <div
-              onClick={() => navigate('/all-products')}
-              className="bg-gradient-to-br from-primary to-primary/80 rounded-2xl p-5 shadow-lg cursor-pointer active:scale-[0.98] transition-all group"
+              onClick={() => navigate('/')}
+              className="col-span-2 bg-gradient-to-br from-primary to-primary/80 rounded-3xl p-5 shadow-lg cursor-pointer active:scale-[0.98] transition-all group flex items-center justify-between"
             >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-3xl group-hover:scale-110 transition-transform">
-                    🌍
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-white mb-1">{t('home.all')}</h3>
-                    <p className="text-sm text-white/80 font-medium">{products.length} {lang === 'uz' ? 'ta mahsulot' : (lang === 'ru' ? 'товаров' : 'products')}</p>
-                  </div>
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-xl bg-white/15 backdrop-blur-sm flex items-center justify-center group-hover:scale-105 transition-transform flex-shrink-0">
+                  <LayoutGrid className="w-6 h-6 text-white" strokeWidth={1.75} />
                 </div>
-                <ChevronRight className="w-6 h-6 text-white/80 group-hover:translate-x-1 transition-transform" />
+                <div>
+                  <h3 className="text-base font-bold text-white mb-0.5">{t('home.all')}</h3>
+                  <p className="text-sm text-white/80 font-medium">{products.length} {lang === 'uz' ? 'ta mahsulot' : (lang === 'ru' ? 'товаров' : 'products')}</p>
+                </div>
               </div>
+              <ChevronRight className="w-5 h-5 text-white/80 group-hover:translate-x-1 transition-transform flex-shrink-0" />
             </div>
 
-            {/* Kategoriyalar ro'yxati */}
+            {/* Kategoriyalar tarmoq (grid) */}
             {dynamicCategories.map((catKey) => (
               <div
                 key={catKey}
                 onClick={() => handleCategoryClick(catKey)}
-                className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 cursor-pointer hover:shadow-md active:scale-[0.98] transition-all group"
+                className="bg-white rounded-3xl p-3 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-50 cursor-pointer hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] transition-all group flex flex-col"
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4 flex-1 min-w-0">
-                    <div className="w-16 h-16 rounded-xl bg-slate-50 flex items-center justify-center overflow-hidden flex-shrink-0 group-hover:scale-105 transition-transform">
-                      {categoryImageMap[catKey] ? (
-                        <img
-                          src={categoryImageMap[catKey]}
-                          alt={catKey}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <span className="text-3xl">📁</span>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-base font-bold text-slate-900 mb-1 truncate">
-                        {categoryDisplayMap[catKey] || catKey}
-                      </h3>
-                      <p className="text-sm text-slate-500 font-medium">
-                        {categoryCountMap[catKey] || 0} {lang === 'uz' ? 'ta mahsulot' : (lang === 'ru' ? 'товаров' : 'products')}
-                      </p>
-                    </div>
-                  </div>
-                  <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-primary group-hover:translate-x-1 transition-all flex-shrink-0" />
+                <div className="aspect-square w-full rounded-2xl bg-white border border-slate-100 flex items-center justify-center overflow-hidden p-3 mb-2 group-hover:border-primary/30 transition-colors">
+                  {categoryImageMap[catKey] ? (
+                    <img
+                      src={categoryImageMap[catKey]}
+                      alt={catKey}
+                      className="w-full h-full object-contain"
+                    />
+                  ) : (
+                    <Package className="w-8 h-8 text-slate-300" strokeWidth={1.5} />
+                  )}
                 </div>
+                <h3 className="text-sm font-semibold text-slate-800 line-clamp-2 leading-tight mb-1 min-h-[34px]">
+                  {categoryDisplayMap[catKey] || catKey}
+                </h3>
+                <p className="text-xs text-slate-500 font-medium mt-auto">
+                  {categoryCountMap[catKey] || 0} {lang === 'uz' ? 'ta mahsulot' : (lang === 'ru' ? 'товаров' : 'products')}
+                </p>
               </div>
             ))}
           </div>

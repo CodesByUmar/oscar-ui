@@ -84,7 +84,9 @@ export function CategoryDetail() {
                     </div>
                 ) : (
                     <div className="bg-white rounded-3xl p-8 text-center border border-slate-100 shadow-sm">
-                        <div className="text-6xl mb-4">🔍</div>
+                        <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
+                            <Search className="w-6 h-6 text-slate-400" strokeWidth={1.75} />
+                        </div>
                         <h3 className="text-lg font-bold text-slate-800 mb-2">
                             {searchQuery ? "Hech narsa topilmadi" : t('product.not_found')}
                         </h3>

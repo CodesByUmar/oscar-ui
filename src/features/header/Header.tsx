@@ -76,17 +76,17 @@ export function Header() {
     <>
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm">
         <div className="container flex h-16 items-center justify-between px-4 max-w-2xl mx-auto">
-          <Link to="/" className="flex items-center gap-2">
-            <img src="/image.png" alt="Oscar" className="w-full h-[35px]" />
+          <Link to="/" className="flex items-center gap-2 shrink-0">
+            <img src="/image.png" alt="Oscar" className="h-[28px] sm:h-[32px] w-auto" />
           </Link>
-          <nav className="flex items-center gap-1">
+          <nav className="flex items-center gap-0.5 sm:gap-1">
             {/* Til tanlash */}
-            <div className="flex items-center bg-slate-100 rounded-full p-0.5 mr-1">
+            <div className="flex items-center bg-slate-100 rounded-full p-0.5 mr-0.5 sm:mr-1">
               {langs.map((l) => (
                 <button
                   key={l}
                   onClick={() => setLang(l)}
-                  className={`px-2.5 py-1 rounded-full text-[11px] font-bold uppercase transition-all ${lang === l
+                  className={`px-2 py-1 rounded-full text-[10px] sm:text-[11px] font-bold uppercase transition-all ${lang === l
                     ? 'bg-white text-primary shadow-sm'
                     : 'text-slate-500 hover:text-slate-700'
                     }`}
@@ -98,32 +98,32 @@ export function Header() {
 
             <button
               onClick={() => setSearchOpen(true)}
-              className="p-2 rounded-full hover:bg-slate-100"
+              className="p-1.5 sm:p-2 rounded-full hover:bg-slate-100"
             >
-              <Search className="h-6 w-6 text-slate-700" />
+              <Search className="h-5 w-5 sm:h-6 sm:w-6 text-slate-700" />
             </button>
 
             <button
               onClick={() => setNotificationOpen(true)}
-              className="relative p-2 rounded-full hover:bg-slate-100"
+              className="relative p-1.5 sm:p-2 rounded-full hover:bg-slate-100"
             >
-              <Bell className="h-6 w-6 text-slate-700" />
+              <Bell className="h-5 w-5 sm:h-6 sm:w-6 text-slate-700" />
               {unreadCount > 0 && (
-                <span className="absolute top-1 right-1 w-4 h-4 text-[10px] font-bold text-white bg-primary rounded-full">
+                <span className="absolute top-0.5 right-0.5 w-4 h-4 text-[10px] font-bold text-white bg-primary rounded-full flex items-center justify-center">
                   {unreadCount}
                 </span>
               )}
             </button>
             <button
               onClick={() => setShowCallCenter(true)}
-              className="p-2 rounded-full hover:bg-slate-100"
+              className="flex p-1.5 sm:p-2 rounded-full hover:bg-slate-100"
               title="Call Center"
             >
               <Phone className="h-5 w-5 text-slate-700" />
             </button>
             <button
               onClick={handleAuthClick}
-              className={`flex items-center justify-center p-2 rounded-full ${user?.isVip
+              className={`flex items-center justify-center p-1.5 sm:p-2 rounded-full ${user?.isVip
                 ? 'bg-amber-50 text-amber-700 hover:bg-amber-100'
                 : 'bg-primary/10 text-primary hover:bg-primary/20'
                 }`}
@@ -133,9 +133,9 @@ export function Header() {
               }}
             >
               {user?.isVip ? (
-                <LogOut className="w-5 h-5" />
+                <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
               ) : (
-                <LogIn className="w-5 h-5" />
+                <LogIn className="w-4 h-4 sm:w-5 sm:h-5" />
               )}
             </button>
           </nav>

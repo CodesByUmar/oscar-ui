@@ -1,7 +1,7 @@
 // // src/pages/Checkout.tsx
 // import { useState, useEffect, useRef, useCallback } from "react";
 // import { useNavigate } from "react-router-dom";
-// import { ChevronLeft, Loader2, CheckCircle2, MapPin, ChevronDown, Navigation, X, Truck, Store } from "lucide-react";
+// import { ChevronLeft, Loader2, CheckCircle2, MapPin, ChevronDown, Navigation, X, Truck, Store, Crown } from "lucide-react";
 // import { useCartStore } from "@/store/cartStore";
 // import { Button } from "@/components/ui/button";
 // import { Input } from "@/components/ui/input";
@@ -826,7 +826,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { formatUZS } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, Loader2, CheckCircle2, MapPin, ChevronDown, Navigation, X, Truck, Store } from "lucide-react";
+import { ChevronLeft, Loader2, CheckCircle2, MapPin, ChevronDown, Navigation, X, Truck, Store, Crown } from "lucide-react";
 import { useCartStore } from "@/store/cartStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -1512,7 +1512,7 @@ export default function Checkout() {
           {isVip && (
             <div className="bg-white p-5 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-50 space-y-4">
               <div className="flex items-center gap-3 p-3 bg-primary/5 rounded-xl">
-                <span className="text-2xl">👑</span>
+                <Crown className="w-6 h-6 text-primary" strokeWidth={1.75} />
                 <div>
                   <p className="text-xs font-bold text-primary uppercase tracking-wider">{t('checkout.vip_label')}</p>
                   <p className="font-semibold text-slate-800">@{user?.username}</p>

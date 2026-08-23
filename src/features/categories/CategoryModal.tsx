@@ -1,4 +1,5 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { LayoutGrid, Package } from "lucide-react";
 import { useCategoryStore } from "@/store/categoryStore";
 import { useProductStore } from "@/store/productStore";
 import { useI18nStore } from "@/store/i18nStore";
@@ -43,8 +44,8 @@ export function CategoryModal({ open, onOpenChange }: CategoryModalProps) {
             }}
             className="flex flex-col items-center justify-start gap-2 cursor-pointer p-2 rounded-xl transition-colors hover:bg-slate-100 touch-manipulation active:bg-slate-200"
           >
-            <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center p-2 shadow-sm border border-slate-100 text-3xl">
-               🌍
+            <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center p-2 shadow-sm border border-slate-100">
+              <LayoutGrid className="w-6 h-6 text-primary" strokeWidth={1.75} />
             </div>
             <span className="text-xs font-medium text-center leading-tight">{t('categoryModal.all')}</span>
           </div>
@@ -58,11 +59,11 @@ export function CategoryModal({ open, onOpenChange }: CategoryModalProps) {
               }}
               className="flex flex-col items-center justify-start gap-2 cursor-pointer p-2 rounded-xl transition-colors hover:bg-slate-100 touch-manipulation active:bg-slate-200"
             >
-              <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center p-1.5 shadow-sm shadow-slate-200/50 border border-slate-100 text-3xl overflow-hidden">
+              <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center p-2 shadow-sm shadow-slate-200/50 border border-slate-100 overflow-hidden">
                 {categoryImageMap[catKey] ? (
-                  <img src={categoryImageMap[catKey]} alt={catKey} className="w-full h-full object-cover rounded-xl" />
+                  <img src={categoryImageMap[catKey]} alt={catKey} className="w-full h-full object-contain" />
                 ) : (
-                  "📁"
+                  <Package className="w-6 h-6 text-slate-300" strokeWidth={1.75} />
                 )}
               </div>
               <span className="text-xs font-medium text-center text-slate-700 leading-tight line-clamp-2">

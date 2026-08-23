@@ -896,6 +896,10 @@ function YandexPickerMap({
   return <div ref={containerRef} style={{ width: "100%", height: "100%" }} />;
 }
 
+// Haqiqiy do'kon QR-chеklaridan olingan merchant ID'lar (Payme va UzumPay).
+const PAYME_MERCHANT_ID = "660d234690823bcdf98bebe5";
+const APELSIN_SERVICE_ID = "498609633";
+
 // Phone formatter
 const formatPhoneNumber = (value: string) => {
   const digits = value.replace(/\D/g, "");
@@ -1353,11 +1357,17 @@ export default function Checkout() {
 
       if (!isVip && paymentMethod === "card") {
         if (paymentProvider === "payme") {
-          // VAQTINCHALIK: Payme'ning statik (fallback) sahifasiga o'tkazamiz.
-          const merchantId = import.meta.env.VITE_PAYME_MERCHANT_ID;
-          window.open(`https://payme.uz/fallback/merchant/?id=660d234690823bcdf98bebe5`, "_blank");
+          // Payme'ning rasmiy checkout havolasi — merchant ID va summa (tiyinda)
+          // base64 qilib kodlanadi, shunda mijoz summani qo'lda kiritmaydi.
+          const amountTiyin = Math.round(finalTotalUZSWithDelivery * 100);
+          const paymeParams = `m=${PAYME_MERCHANT_ID};a=${amountTiyin}`;
+          window.open(`https://checkout.paycom.uz/${btoa(paymeParams)}`, "_blank");
         } else if (paymentProvider === "uzum") {
-          window.open("https://www.apelsin.uz/open-service?serviceId=498609633", "_blank");
+          // MUHIM: Apelsin/UzumPay uchun summani URL orqali uzatish parametri
+          // hujjatlashtirilmagan, shuning uchun noto'g'ri taxmin qilmaslik uchun
+          // mijozga to'lanadigan aniq summani oldindan ko'rsatamiz.
+          alert(`Diqqat: keyingi sahifada ${formatUZS(finalTotalUZSWithDelivery)} so'm summasini kiriting/tasdiqlang.`);
+          window.open(`https://payment.apelsin.uz/merchant?serviceId=${APELSIN_SERVICE_ID}`, "_blank");
         }
       }
     } catch (error) {

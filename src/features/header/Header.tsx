@@ -23,6 +23,7 @@ export function Header() {
   const langs = ['uz', 'ru', 'en'] as const;
   const callCenterText = {
     label: lang === 'uz' ? "Call Center" : (lang === 'ru' ? "Колл-центр" : "Call Center"),
+    callBtn: lang === 'uz' ? "Qo'ng'iroq qilish" : (lang === 'ru' ? "Позвонить" : "Call"),
     copyBtn: lang === 'uz' ? "Nusxa olish" : (lang === 'ru' ? "Скопировать" : "Copy"),
     copiedBtn: lang === 'uz' ? "Nusxa olindi!" : (lang === 'ru' ? "Скопировано!" : "Copied!"),
   };
@@ -185,23 +186,37 @@ export function Header() {
               <Phone className="w-7 h-7 text-primary" />
             </div>
             <h3 className="text-sm font-semibold text-slate-500 mb-1">{callCenterText.label}</h3>
-            <p className="text-2xl font-bold text-slate-900 mb-4 tracking-wide">+998 55 511 11 66</p>
-            <button
-              onClick={handleCopyPhone}
-              className="w-full h-11 rounded-xl font-semibold bg-primary/10 text-primary hover:bg-primary/20 flex items-center justify-center gap-2 transition-colors"
+            <a
+              href="tel:+998555111166"
+              className="block text-2xl font-bold text-slate-900 mb-4 tracking-wide hover:text-primary transition-colors"
             >
-              {copied ? (
-                <>
-                  <Check className="w-4 h-4" />
-                  {callCenterText.copiedBtn}
-                </>
-              ) : (
-                <>
-                  <Copy className="w-4 h-4" />
-                  {callCenterText.copyBtn}
-                </>
-              )}
-            </button>
+              +998 55 511 11 66
+            </a>
+            <div className="flex gap-2">
+              <a
+                href="tel:+998555111166"
+                className="flex-1 h-11 rounded-xl font-semibold bg-primary text-white hover:bg-primary/90 flex items-center justify-center gap-2 transition-colors"
+              >
+                <Phone className="w-4 h-4" />
+                {callCenterText.callBtn}
+              </a>
+              <button
+                onClick={handleCopyPhone}
+                className="flex-1 h-11 rounded-xl font-semibold bg-primary/10 text-primary hover:bg-primary/20 flex items-center justify-center gap-2 transition-colors"
+              >
+                {copied ? (
+                  <>
+                    <Check className="w-4 h-4" />
+                    {callCenterText.copiedBtn}
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-4 h-4" />
+                    {callCenterText.copyBtn}
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}

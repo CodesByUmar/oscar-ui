@@ -91,6 +91,7 @@ export const useProductStore = create<ProductState>((set, get) => ({
       querySnapshot.forEach((doc) => {
         const data = doc.data();
         if (data.draft === true) return; // hali rasm/narx to'ldirilmagan — mijozlarga ko'rinmaydi
+        if (data.imageBroken === true) return; // rasm havolasi o'lik — qayta yuklanguncha ko'rinmaydi
         let rawCategory: string;
         let parsedCategoryI18n: Record<string, string> | undefined;
         if (isI18nObject(data.category)) {

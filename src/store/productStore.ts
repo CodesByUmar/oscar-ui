@@ -89,6 +89,7 @@ export const useProductStore = create<ProductState>((set, get) => ({
       const productsList: Product[] = [];
       querySnapshot.forEach((doc) => {
         const data = doc.data();
+        if (data.draft === true) return; // hali rasm/narx to'ldirilmagan — mijozlarga ko'rinmaydi
         let rawCategory: string;
         let parsedCategoryI18n: Record<string, string> | undefined;
         if (isI18nObject(data.category)) {

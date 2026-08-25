@@ -11,26 +11,22 @@ export function Categories() {
   const lang = useI18nStore((s) => s.lang);
   const navigate = useNavigate();
 
-  const dynamicCategories = Array.from(new Set(products.map((p) => p.categoryKey))).filter(Boolean);
+  const dynamicTopCategories = Array.from(new Set(products.map((p) => p.topCategory))).filter(Boolean);
 
-  const categoryDisplayMap: Record<string, string> = {};
-  const categoryImageMap: Record<string, string> = {};
-  const categoryCountMap: Record<string, number> = {};
+  const topImageMap: Record<string, string> = {};
+  const topCountMap: Record<string, number> = {};
 
   products.forEach(product => {
-    if (product.categoryKey) {
-      if (!categoryDisplayMap[product.categoryKey]) {
-        categoryDisplayMap[product.categoryKey] = product.category;
+    if (product.topCategory) {
+      if (!topImageMap[product.topCategory] && product.image) {
+        topImageMap[product.topCategory] = product.image;
       }
-      if (!categoryImageMap[product.categoryKey] && product.image) {
-        categoryImageMap[product.categoryKey] = product.image;
-      }
-      categoryCountMap[product.categoryKey] = (categoryCountMap[product.categoryKey] || 0) + 1;
+      topCountMap[product.topCategory] = (topCountMap[product.topCategory] || 0) + 1;
     }
   });
 
-  const handleCategoryClick = (catKey: string) => {
-    navigate(`/category/${encodeURIComponent(catKey)}`);
+  const handleCategoryClick = (topCategory: string) => {
+    navigate(`/categories/${encodeURIComponent(topCategory)}`);
   };
 
   return (
@@ -69,18 +65,18 @@ export function Categories() {
               <ChevronRight className="w-5 h-5 text-white/80 group-hover:translate-x-1 transition-transform flex-shrink-0" />
             </div>
 
-            {/* Kategoriyalar tarmoq (grid) */}
-            {dynamicCategories.map((catKey) => (
+            {/* Ustki kategoriyalar tarmoq (grid) */}
+            {dynamicTopCategories.map((topCategory) => (
               <div
-                key={catKey}
-                onClick={() => handleCategoryClick(catKey)}
+                key={topCategory}
+                onClick={() => handleCategoryClick(topCategory)}
                 className="bg-white rounded-3xl p-3 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-50 cursor-pointer hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] transition-all group flex flex-col"
               >
                 <div className="aspect-square w-full rounded-2xl bg-white border border-slate-100 flex items-center justify-center overflow-hidden p-3 mb-2 group-hover:border-primary/30 transition-colors">
-                  {categoryImageMap[catKey] ? (
+                  {topImageMap[topCategory] ? (
                     <img
-                      src={categoryImageMap[catKey]}
-                      alt={catKey}
+                      src={topImageMap[topCategory]}
+                      alt={topCategory}
                       className="w-full h-full object-contain"
                     />
                   ) : (
@@ -88,10 +84,10 @@ export function Categories() {
                   )}
                 </div>
                 <h3 className="text-sm font-semibold text-slate-800 line-clamp-2 leading-tight mb-1 min-h-[34px]">
-                  {categoryDisplayMap[catKey] || catKey}
+                  {topCategory}
                 </h3>
                 <p className="text-xs text-slate-500 font-medium mt-auto">
-                  {categoryCountMap[catKey] || 0} {lang === 'uz' ? 'ta mahsulot' : (lang === 'ru' ? 'товаров' : 'products')}
+                  {topCountMap[topCategory] || 0} {lang === 'uz' ? 'ta mahsulot' : (lang === 'ru' ? 'товаров' : 'products')}
                 </p>
               </div>
             ))}

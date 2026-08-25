@@ -14,6 +14,7 @@ import Checkout from "./pages/Checkout";
 import { SignIn } from "./features/auth/SignIn";
 import { CategoryDetail } from "@/pages/CategoryDetail";
 import { AllProducts } from "@/pages/AllProducts";
+import { SubcategoryList } from "@/pages/SubcategoryList";
 
 function App() {
   const fetchProducts = useProductStore(state => state.fetchProducts);
@@ -67,6 +68,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/categories" element={<Categories />} />
+        <Route path="/categories/:topCategory" element={<SubcategoryList />} />
         <Route path="/all-products" element={<AllProducts />} />
         <Route path="/category/:categoryKey" element={<CategoryDetail />} />
         <Route path="/product/:id" element={<ProductDetail />} />

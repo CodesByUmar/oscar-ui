@@ -43,6 +43,7 @@ export interface Product {
   category: string;
   categoryKey: string; // canonical UZ form, used for filtering & remapping
   categoryI18n?: Record<string, string>;
+  topCategory: string; // katalogdagi ustki (top) kategoriya — kategoriya > subkategoriya navigatsiyasi uchun
   image: string;
   description: string;
   descriptionI18n?: Record<string, string>;
@@ -108,6 +109,7 @@ export const useProductStore = create<ProductState>((set, get) => ({
           categoryKey: rawCategory,
           category: parsedCategoryI18n ? resolveI18n(parsedCategoryI18n, lang, rawCategory) : translateCategory(rawCategory, lang),
           categoryI18n: parsedCategoryI18n,
+          topCategory: (typeof data.topCategory === 'string' && data.topCategory) || 'Boshqa',
           image: data.image || '',
           description: resolveI18n(data.description, lang),
           descriptionI18n: isI18nObject(data.description) ? data.description : undefined,

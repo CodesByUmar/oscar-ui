@@ -33,6 +33,18 @@ const GUEST_USER: AuthUser = {
 };
 
 const STORAGE_KEY = "oscar_vip_user";
+const TOKEN_KEY = "oscar_vip_token";
+
+function toVipUser(uid: string, data: { login?: string; username?: string }): AuthUser {
+    return {
+        uid,
+        email: "",
+        login: data.login || "",
+        username: data.username || data.login || "VIP User",
+        isVip: true,
+        isGuest: false,
+    };
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<AuthUser | null>(null);
@@ -40,42 +52,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     useEffect(() => {
         (async () => {
-            // 1) Avval saqlangan VIP sessiyani tekshiramiz (localStorage)
-            const saved = localStorage.getItem(STORAGE_KEY);
-            if (saved) {
+            // 1) Avval saqlangan sessiya tokenini tekshiramiz. Token serverda
+            // imzolangan bo'lgani uchun mijoz uid'ni o'zgartira olmaydi —
+            // eski usulda esa localStorage'dagi uid'ga to'g'ridan-to'g'ri
+            // ishonilar edi.
+            const savedToken = localStorage.getItem(TOKEN_KEY);
+            if (savedToken) {
                 try {
-                    const parsedUser: AuthUser = JSON.parse(saved);
-                    // Hali ham VIP ekanini serverdan tasdiqlaymiz (o'chirilgan bo'lishi mumkin)
-                    const res = await fetch(`${ADMIN_API_URL}/api/vip-check/${parsedUser.uid}`);
-                    if (res.ok) {
-                        setUser(parsedUser);
-                        setLoading(false);
-                        return;
-                    } else {
-                        localStorage.removeItem(STORAGE_KEY);
-                    }
-                } catch {
-                    localStorage.removeItem(STORAGE_KEY);
-                }
-            }
-
-            // 2) Telegram foydalanuvchisi VIP ro'yxatida bormi, tekshiramiz
-            const tg = (window as any).Telegram?.WebApp;
-            const tgUser = tg?.initDataUnsafe?.user;
-
-            if (tgUser) {
-                try {
-                    const res = await fetch(`${ADMIN_API_URL}/api/vip-check/${tgUser.id}`);
+                    const res = await fetch(`${ADMIN_API_URL}/api/vip-check`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ token: savedToken }),
+                    });
                     if (res.ok) {
                         const { user: data } = await res.json();
-                        setUser({
-                            uid: String(tgUser.id),
-                            email: "",
-                            login: data.login || "",
-                            username: data.username || data.login || "VIP User",
-                            isVip: true,
-                            isGuest: false,
-                        });
+                        setUser(toVipUser(data.uid, data));
+                        setLoading(false);
+                        return;
+                    }
+                } catch {
+                    // tarmoq xatosi — pastdagi yo'llarga o'tamiz
+                }
+                localStorage.removeItem(STORAGE_KEY);
+                localStorage.removeItem(TOKEN_KEY);
+            }
+
+            // 2) Telegram ichida ochilgan bo'lsa, Telegram tomonidan
+            // imzolangan initData'ni yuboramiz (initDataUnsafe emas — u
+            // mijoz tomonidan o'zgartirilishi mumkin va serverda hech
+            // qanday tasdiqlanmaydi).
+            const tg = (window as any).Telegram?.WebApp;
+            const initData: string | undefined = tg?.initData;
+
+            if (initData) {
+                try {
+                    const res = await fetch(`${ADMIN_API_URL}/api/vip-telegram-check`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ initData }),
+                    });
+                    if (res.ok) {
+                        const { user: data, token } = await res.json();
+                        setUser(toVipUser(data.uid, data));
+                        if (token) localStorage.setItem(TOKEN_KEY, token);
                         setLoading(false);
                         return;
                     }
@@ -106,23 +125,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             throw new Error("Login yoki parol noto'g'ri");
         }
 
-        const { user: data } = await res.json();
-
-        const vipUser: AuthUser = {
-            uid: data.uid,
-            email: "",
-            login: data.login || trimmedLogin,
-            username: data.username || data.login || "VIP User",
-            isVip: true,
-            isGuest: false,
-        };
+        const { user: data, token } = await res.json();
+        const vipUser = toVipUser(data.uid, data);
 
         setUser(vipUser);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(vipUser));
+        if (token) localStorage.setItem(TOKEN_KEY, token);
     };
 
     const signOut = async () => {
         localStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem(TOKEN_KEY);
         setUser(GUEST_USER);
     };
 

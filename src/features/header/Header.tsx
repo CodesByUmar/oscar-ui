@@ -1,6 +1,6 @@
 // src/features/header/Header.tsx
 import { useState } from "react";
-import { Bell, Search, LogOut, LogIn, Phone, Copy, Check } from "lucide-react";
+import { Bell, Search, LogOut, LogIn, Phone, Copy, Check, Crown } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useNotificationStore } from "@/store/notificationStore";
 import { NotificationModal } from "@/features/notifications/NotificationModal";
@@ -122,6 +122,15 @@ export function Header() {
             >
               <Phone className="h-5 w-5 text-slate-700" />
             </button>
+            {user?.isVip && (
+              <Link
+                to="/profile"
+                className="flex items-center justify-center p-1.5 sm:p-2 rounded-full bg-amber-50 text-amber-700 hover:bg-amber-100"
+                title="Profil"
+              >
+                <Crown className="w-4 h-4 sm:w-5 sm:h-5" />
+              </Link>
+            )}
             <button
               onClick={handleAuthClick}
               className={`flex items-center justify-center p-1.5 sm:p-2 rounded-full ${user?.isVip

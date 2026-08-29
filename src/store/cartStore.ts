@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { useSettingsStore } from './settingsStore';
 
 export interface CartItem {
   cartItemId: string; // Composite key: `${productId}-${unit}`
@@ -69,17 +70,11 @@ export const useCartStore = create<CartState>()(
       },
       clearCart: () => set({ items: [] }),
       getTotals: () => {
-        return get().items.reduce(
-          (acc, item) => {
-            if (item.unit === 'item') {
-              acc.totalUSD += item.price * item.quantity;
-            } else {
-              acc.totalUZS += item.price * item.quantity;
-            }
-            return acc;
-          },
-          { totalUSD: 0, totalUZS: 0 }
-        );
+        // Narx har doim USD (unit — 'item'/'box' — faqat sotuv birligi,
+        // valyutaga ta'siri yo'q). UZS joriy kursdan hisoblanadi.
+        const usdRate = useSettingsStore.getState().usdRate;
+        const totalUSD = get().items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+        return { totalUSD, totalUZS: totalUSD * usdRate };
       }
     }),
     {

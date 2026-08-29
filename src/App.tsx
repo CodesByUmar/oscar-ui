@@ -15,6 +15,7 @@ import { SignIn } from "./features/auth/SignIn";
 import { CategoryDetail } from "@/pages/CategoryDetail";
 import { AllProducts } from "@/pages/AllProducts";
 import { SubcategoryList } from "@/pages/SubcategoryList";
+import { Profile } from "@/pages/Profile";
 
 function App() {
   const fetchProducts = useProductStore(state => state.fetchProducts);
@@ -76,6 +77,7 @@ function App() {
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/location" element={<LocationPage />} />
         <Route path="/signin" element={<SignIn />} />
+        <Route path="/profile" element={<Profile />} />
       </Routes>
       <BottomNav />
     </div>

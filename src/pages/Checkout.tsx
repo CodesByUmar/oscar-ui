@@ -826,12 +826,12 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { formatUZS } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, Loader2, CheckCircle2, MapPin, ChevronDown, Navigation, X, Truck, Store, Crown } from "lucide-react";
+import { ChevronLeft, Loader2, CheckCircle2, MapPin, ChevronDown, Navigation, X, Truck, Store, Crown, Search } from "lucide-react";
 import { useCartStore } from "@/store/cartStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { addDoc, collection } from "firebase/firestore";
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { STORE_LOCATION, estimateRoadDistance, calculateDeliveryFee } from "@/lib/delivery";
 import { useSettingsStore } from "@/store/settingsStore";
@@ -894,6 +894,79 @@ function YandexPickerMap({
   }, [mapCenter]);
 
   return <div ref={containerRef} style={{ width: "100%", height: "100%" }} />;
+}
+
+// O'zbekiston chegaralari (SW, NE) — qidiruv takliflarini shu hudud bilan
+// cheklash uchun.
+const UZ_BOUNDS: [[number, number], [number, number]] = [[37.0, 55.9], [45.6, 73.2]];
+
+// Manzil qidiruv maydoni — Yandex'ning o'z SuggestView vidjeti orqali ishlaydi
+// (alohida Suggest API kaliti kerak emas, xarita skriptida ishlatilgan
+// apikey yetarli). Foydalanuvchi harf-ma-harf yozganda O'zbekiston bo'ylab
+// mos keluvchi barcha joylashuvlarni (ko'cha, tuman, bino, muassasa nomi)
+// taklif ro'yxati sifatida ko'rsatadi.
+function YandexAddressSearch({
+  onSelect,
+}: {
+  onSelect: (coords: { lat: number; lng: number }, address: string) => void;
+}) {
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const suggestViewRef = useRef<any>(null);
+  const [query, setQuery] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
+  const onSelectRef = useRef(onSelect);
+  onSelectRef.current = onSelect;
+
+  useEffect(() => {
+    let cancelled = false;
+    const apiKey = import.meta.env.VITE_YANDEX_MAPS_API_KEY as string | undefined;
+
+    loadYandexMaps(apiKey || "")
+      .then((ymaps) => {
+        if (cancelled || !inputRef.current) return;
+        const suggestView = new ymaps.SuggestView(inputRef.current, {
+          results: 6,
+          boundedBy: UZ_BOUNDS,
+        });
+        suggestViewRef.current = suggestView;
+
+        suggestView.events.add("select", async (e: any) => {
+          const value: string = e.get("item").value;
+          setQuery(value);
+          setIsSearching(true);
+          const coords = await yandexForwardGeocode(value);
+          setIsSearching(false);
+          if (coords) {
+            onSelectRef.current(coords, value);
+          }
+        });
+      })
+      .catch((err) => console.error("Yandex Suggest yuklashda xato:", err));
+
+    return () => {
+      cancelled = true;
+      if (suggestViewRef.current) {
+        suggestViewRef.current.events.removeAll("select");
+      }
+    };
+  }, []);
+
+  return (
+    <div className="relative">
+      <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+      <input
+        ref={inputRef}
+        type="text"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder="Manzil yoki joy nomini qidiring..."
+        className="w-full h-11 pl-10 pr-4 rounded-full bg-white shadow-md border border-slate-100 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/30"
+      />
+      {isSearching && (
+        <Loader2 className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-primary animate-spin" />
+      )}
+    </div>
+  );
 }
 
 // Haqiqiy do'kon QR-chekidan olingan Payme merchant ID.
@@ -1146,12 +1219,14 @@ export default function Checkout() {
   useEffect(() => {
     if (!formData.region) return;
 
+    let cancelled = false;
     const query = formData.district
       ? `${formData.region}, ${formData.district}`
       : formData.region;
 
     (async () => {
       const coords = await yandexForwardGeocode(`${query}, O'zbekiston`);
+      if (cancelled) return;
       if (coords) {
         setMapCenter(coords);
         return;
@@ -1159,6 +1234,7 @@ export default function Checkout() {
       try {
         const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query + ', Uzbekistan')}`);
         const data = await res.json();
+        if (cancelled) return;
         if (data && data.length > 0) {
           setMapCenter({ lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) });
         }
@@ -1166,6 +1242,10 @@ export default function Checkout() {
         console.error("OSM Fallback failed:", e);
       }
     })();
+
+    // Viloyat/tuman tez orada boshqasiga almashtirilsa, eski (kech qolgan)
+    // javob xarita markazini noto'g'ri joyga sakratmasligi uchun.
+    return () => { cancelled = true; };
   }, [formData.region, formData.district]);
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1245,6 +1325,16 @@ export default function Checkout() {
     );
   };
 
+  // Qidiruv orqali joy tanlanganda: xaritani o'sha yerga ko'chiramiz va
+  // tanlangan manzil matnini darhol ko'rsatamiz (xarita joylashguncha
+  // pastdagi "Manzil" maydoni bo'sh turib qolmasligi uchun).
+  const handleAddressSearchSelect = useCallback((coords: { lat: number; lng: number }, address: string) => {
+    lastFetchedCenterRef.current = coords;
+    setMapCenter(coords);
+    setTempLocation({ lat: coords.lat, lng: coords.lng, address });
+    setIsGeocoding(false);
+  }, []);
+
   const openMap = () => {
     setIsMapOpen(true);
 
@@ -1266,6 +1356,14 @@ export default function Checkout() {
     e.preventDefault();
     if (checkoutStep !== "idle" || items.length === 0) return;
 
+    let telegramChatId = null;
+    try {
+      const tg = (window as any).Telegram?.WebApp;
+      if (tg?.initDataUnsafe?.user?.id) {
+        telegramChatId = tg.initDataUnsafe.user.id;
+      }
+    } catch (e) { }
+
     if (!isVip) {
       if (!formData.fullName.trim()) {
         alert("Ism familiyani kiriting");
@@ -1273,6 +1371,27 @@ export default function Checkout() {
       }
       if (formData.phone.replace(/\D/g, "").length < 12) {
         alert("Telefon raqamni to'liq kiriting.");
+        return;
+      }
+    }
+
+    // VIP uchun ham telefonni topamiz — avval formadan, bo'lmasa telegram_users'dan.
+    // Ikkalasidan ham topilmasa, buyurtma berishga yo'l qo'ymaymiz — aks holda
+    // admin mijozga qo'ng'iroq qila olmaydigan buyurtma yaratiladi.
+    let vipPhone: string | null = null;
+    if (isVip) {
+      const formPhoneDigits = formData.phone.replace(/\D/g, "");
+      if (formPhoneDigits.length >= 12) {
+        vipPhone = formData.phone.replace(/\s/g, "");
+      } else if (telegramChatId) {
+        try {
+          const { doc: firestoreDoc, getDoc } = await import("firebase/firestore");
+          const uDoc = await getDoc(firestoreDoc(db, "telegram_users", String(telegramChatId)));
+          if (uDoc.exists() && uDoc.data().phone) vipPhone = uDoc.data().phone;
+        } catch (e) { console.error("VIP telefon lookup xato:", e); }
+      }
+      if (!vipPhone) {
+        alert("Iltimos, telefon raqamingizni kiriting — admin siz bilan bog'lanishi uchun zarur.");
         return;
       }
     }
@@ -1288,16 +1407,6 @@ export default function Checkout() {
     }
 
     setCheckoutStep("processing");
-
-    let telegramChatId = null;
-    try {
-      const tg = (window as any).Telegram?.WebApp;
-      if (tg?.initDataUnsafe?.user?.id) {
-        telegramChatId = tg.initDataUnsafe.user.id;
-      }
-    } catch (e) { }
-
-    const now = new Date().toISOString();
 
     const baseOrderData = {
       region: formData.region,
@@ -1331,27 +1440,11 @@ export default function Checkout() {
       paidAt: null,
       cancelledAt: null,
       transactionId: null,
-      createdAt: now,
-      updatedAt: now,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
     };
 
     let orderId = "";
-
-    // ⬅️ YANGI: VIP uchun ham telefonni topamiz —
-    // avval formadan, bo'lmasa telegram_users'dan.
-    let vipPhone: string | null = null;
-    if (isVip) {
-      const formPhoneDigits = formData.phone.replace(/\D/g, "");
-      if (formPhoneDigits.length >= 12) {
-        vipPhone = formData.phone.replace(/\s/g, "");
-      } else if (telegramChatId) {
-        try {
-          const { doc: firestoreDoc, getDoc } = await import("firebase/firestore");
-          const uDoc = await getDoc(firestoreDoc(db, "telegram_users", String(telegramChatId)));
-          if (uDoc.exists() && uDoc.data().phone) vipPhone = uDoc.data().phone;
-        } catch (e) { console.error("VIP telefon lookup xato:", e); }
-      }
-    }
 
     try {
       const docRef = await addDoc(collection(db, "orders"), {
@@ -1743,6 +1836,16 @@ export default function Checkout() {
                 mapRef.current = map;
               }}
             />
+
+            {/* Manzil qidiruv maydoni — Yandex Suggest orqali joy nomi bo'yicha izlash */}
+            <div
+              className="absolute left-0 right-0 z-20 px-4 pointer-events-none"
+              style={{ top: "calc(4.75rem + env(safe-area-inset-top))" }}
+            >
+              <div className="pointer-events-auto">
+                <YandexAddressSearch onSelect={handleAddressSearchSelect} />
+              </div>
+            </div>
 
             {/* Center Pin Overlay */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[100%] pointer-events-none drop-shadow-xl z-10 pb-1">

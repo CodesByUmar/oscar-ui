@@ -1,5 +1,5 @@
 // src/App.tsx
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 import { Home } from "@/pages/Home";
 import { ProductDetail } from "@/pages/ProductDetail";
 import { Cart } from "@/pages/Cart";
@@ -16,6 +16,19 @@ import { CategoryDetail } from "@/pages/CategoryDetail";
 import { AllProducts } from "@/pages/AllProducts";
 import { SubcategoryList } from "@/pages/SubcategoryList";
 import { Profile } from "@/pages/Profile";
+
+// Sahifalar orasida o'tishda scroll pozitsiyasi avvalgi sahifadan
+// meros bo'lib qolardi (masalan uzun ro'yxatni pastga scroll qilib,
+// keyin qisqaroq sahifaga o'tsa, foydalanuvchi bo'sh joyda, kontentsiz
+// qolib qolar edi — "Suyuq mixlar/Tomchi yelim" kategoriyasida shu
+// sabab bilan oq/bo'sh ekran chiqqan edi).
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
+}
 
 function App() {
   const fetchProducts = useProductStore(state => state.fetchProducts);
@@ -66,6 +79,7 @@ function App() {
 
   return (
     <div className="w-full">
+      <ScrollToTop />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/categories" element={<Categories />} />

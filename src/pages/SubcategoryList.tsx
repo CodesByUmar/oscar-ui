@@ -6,13 +6,17 @@ import { ChevronLeft, Package } from "lucide-react";
 
 export function SubcategoryList() {
     const { topCategory: rawTopCategory } = useParams<{ topCategory: string }>();
-    const topCategory = rawTopCategory ? decodeURIComponent(rawTopCategory) : rawTopCategory;
+    const topCategoryKey = rawTopCategory ? decodeURIComponent(rawTopCategory) : rawTopCategory;
     const navigate = useNavigate();
     const { products, isLoading } = useProductStore();
     const t = useI18nStore((s) => s.t);
     const lang = useI18nStore((s) => s.lang);
 
-    const topProducts = products.filter(p => p.topCategory === topCategory);
+    const topProducts = products.filter(p => p.topCategoryKey === topCategoryKey);
+    // Barcha mos mahsulotlar bir xil topCategoryKey'ga ega, shuning uchun
+    // ko'rsatiladigan (tanlangan tilga tarjima qilingan) nomni ulardan
+    // birinchisidan olamiz — topilmasa xom kalitning o'zi ko'rsatiladi.
+    const topCategoryName = topProducts[0]?.topCategory || topCategoryKey || '';
 
     const dynamicSubcategories = Array.from(new Set(topProducts.map((p) => p.categoryKey))).filter(Boolean);
 
@@ -44,7 +48,7 @@ export function SubcategoryList() {
                             <ChevronLeft className="w-6 h-6 text-slate-700" />
                         </button>
                         <div className="flex-1 min-w-0">
-                            <h1 className="text-xl font-bold text-slate-900 truncate">{topCategory}</h1>
+                            <h1 className="text-xl font-bold text-slate-900 truncate">{topCategoryName}</h1>
                             <p className="text-sm text-slate-500 font-medium">
                                 {topProducts.length} {lang === 'uz' ? 'ta mahsulot' : (lang === 'ru' ? 'товаров' : 'products')}
                             </p>

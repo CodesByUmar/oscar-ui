@@ -11,22 +11,26 @@ export function Categories() {
   const lang = useI18nStore((s) => s.lang);
   const navigate = useNavigate();
 
-  const dynamicTopCategories = Array.from(new Set(products.map((p) => p.topCategory))).filter(Boolean);
+  const dynamicTopCategories = Array.from(new Set(products.map((p) => p.topCategoryKey))).filter(Boolean);
 
+  const topNameMap: Record<string, string> = {};
   const topImageMap: Record<string, string> = {};
   const topCountMap: Record<string, number> = {};
 
   products.forEach(product => {
-    if (product.topCategory) {
-      if (!topImageMap[product.topCategory] && product.image) {
-        topImageMap[product.topCategory] = product.image;
+    if (product.topCategoryKey) {
+      if (!topNameMap[product.topCategoryKey]) {
+        topNameMap[product.topCategoryKey] = product.topCategory;
       }
-      topCountMap[product.topCategory] = (topCountMap[product.topCategory] || 0) + 1;
+      if (!topImageMap[product.topCategoryKey] && product.image) {
+        topImageMap[product.topCategoryKey] = product.image;
+      }
+      topCountMap[product.topCategoryKey] = (topCountMap[product.topCategoryKey] || 0) + 1;
     }
   });
 
-  const handleCategoryClick = (topCategory: string) => {
-    navigate(`/categories/${encodeURIComponent(topCategory)}`);
+  const handleCategoryClick = (topCategoryKey: string) => {
+    navigate(`/categories/${encodeURIComponent(topCategoryKey)}`);
   };
 
   return (
@@ -66,17 +70,17 @@ export function Categories() {
             </div>
 
             {/* Ustki kategoriyalar tarmoq (grid) */}
-            {dynamicTopCategories.map((topCategory) => (
+            {dynamicTopCategories.map((topCategoryKey) => (
               <div
-                key={topCategory}
-                onClick={() => handleCategoryClick(topCategory)}
+                key={topCategoryKey}
+                onClick={() => handleCategoryClick(topCategoryKey)}
                 className="bg-white rounded-3xl p-3 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-50 cursor-pointer hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] transition-all group flex flex-col"
               >
                 <div className="aspect-square w-full rounded-2xl bg-white border border-slate-100 flex items-center justify-center overflow-hidden p-3 mb-2 group-hover:border-primary/30 transition-colors">
-                  {topImageMap[topCategory] ? (
+                  {topImageMap[topCategoryKey] ? (
                     <img
-                      src={topImageMap[topCategory]}
-                      alt={topCategory}
+                      src={topImageMap[topCategoryKey]}
+                      alt={topNameMap[topCategoryKey] || topCategoryKey}
                       className="w-full h-full object-contain"
                     />
                   ) : (
@@ -84,10 +88,10 @@ export function Categories() {
                   )}
                 </div>
                 <h3 className="text-sm font-semibold text-slate-800 line-clamp-2 leading-tight mb-1 min-h-[34px]">
-                  {topCategory}
+                  {topNameMap[topCategoryKey] || topCategoryKey}
                 </h3>
                 <p className="text-xs text-slate-500 font-medium mt-auto">
-                  {topCountMap[topCategory] || 0} {lang === 'uz' ? 'ta mahsulot' : (lang === 'ru' ? 'товаров' : 'products')}
+                  {topCountMap[topCategoryKey] || 0} {lang === 'uz' ? 'ta mahsulot' : (lang === 'ru' ? 'товаров' : 'products')}
                 </p>
               </div>
             ))}

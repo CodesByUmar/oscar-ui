@@ -17,7 +17,6 @@ export function Header() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [showCallCenter, setShowCallCenter] = useState(false);
-  const [copied, setCopied] = useState(false);
   const { lang, setLang } = useI18nStore();
 
   const langs = ['uz', 'ru', 'en'] as const;
@@ -28,11 +27,19 @@ export function Header() {
     copiedBtn: lang === 'uz' ? "Nusxa olindi!" : (lang === 'ru' ? "Скопировано!" : "Copied!"),
   };
 
-  const handleCopyPhone = async () => {
+  // Har bir do'kon/filial uchun alohida qo'ng'iroq raqami.
+  const STORES = [
+    { name: "150-151 OSCAR", phone: "+998900471150" },
+    { name: "10-36 X-TRA", phone: "+998774441036" },
+    { name: "SHOWROOM", phone: "+998946046667" },
+  ];
+
+  const [copiedPhone, setCopiedPhone] = useState<string | null>(null);
+  const handleCopyPhone = async (phone: string) => {
     try {
-      await navigator.clipboard.writeText("+998555111166");
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
+      await navigator.clipboard.writeText(phone);
+      setCopiedPhone(phone);
+      setTimeout(() => setCopiedPhone(null), 1500);
     } catch (error) {
       console.error("Nusxa olishda xato:", error);
     }
@@ -188,43 +195,54 @@ export function Header() {
           onClick={() => setShowCallCenter(false)}
         >
           <div
-            className="bg-white rounded-2xl shadow-xl max-w-xs w-full p-6 text-center"
+            className="bg-white rounded-2xl shadow-xl max-w-xs w-full p-6"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="w-14 h-14 mx-auto mb-3 rounded-full bg-primary/10 flex items-center justify-center">
               <Phone className="w-7 h-7 text-primary" />
             </div>
-            <h3 className="text-sm font-semibold text-slate-500 mb-1">{callCenterText.label}</h3>
-            <a
-              href="tel:+998555111166"
-              className="block text-2xl font-bold text-slate-900 mb-4 tracking-wide hover:text-primary transition-colors"
-            >
-              +998 55 511 11 66
-            </a>
-            <div className="flex gap-2">
-              <a
-                href="tel:+998555111166"
-                className="flex-1 h-11 rounded-xl font-semibold bg-primary text-white hover:bg-primary/90 flex items-center justify-center gap-2 transition-colors"
-              >
-                <Phone className="w-4 h-4" />
-                {callCenterText.callBtn}
-              </a>
-              <button
-                onClick={handleCopyPhone}
-                className="flex-1 h-11 rounded-xl font-semibold bg-primary/10 text-primary hover:bg-primary/20 flex items-center justify-center gap-2 transition-colors"
-              >
-                {copied ? (
-                  <>
-                    <Check className="w-4 h-4" />
-                    {callCenterText.copiedBtn}
-                  </>
-                ) : (
-                  <>
-                    <Copy className="w-4 h-4" />
-                    {callCenterText.copyBtn}
-                  </>
-                )}
-              </button>
+            <h3 className="text-sm font-semibold text-slate-500 mb-4 text-center">{callCenterText.label}</h3>
+            <div className="space-y-3">
+              {STORES.map((store) => {
+                const telHref = `tel:${store.phone}`;
+                const isCopied = copiedPhone === store.phone;
+                return (
+                  <div key={store.phone} className="rounded-xl border border-slate-100 p-3">
+                    <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-0.5">{store.name}</p>
+                    <a
+                      href={telHref}
+                      className="block text-lg font-bold text-slate-900 mb-2 tracking-wide hover:text-primary transition-colors"
+                    >
+                      {store.phone}
+                    </a>
+                    <div className="flex gap-2">
+                      <a
+                        href={telHref}
+                        className="flex-1 h-9 rounded-lg font-semibold text-xs bg-primary text-white hover:bg-primary/90 flex items-center justify-center gap-1.5 transition-colors"
+                      >
+                        <Phone className="w-3.5 h-3.5" />
+                        {callCenterText.callBtn}
+                      </a>
+                      <button
+                        onClick={() => handleCopyPhone(store.phone)}
+                        className="flex-1 h-9 rounded-lg font-semibold text-xs bg-primary/10 text-primary hover:bg-primary/20 flex items-center justify-center gap-1.5 transition-colors"
+                      >
+                        {isCopied ? (
+                          <>
+                            <Check className="w-3.5 h-3.5" />
+                            {callCenterText.copiedBtn}
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-3.5 h-3.5" />
+                            {callCenterText.copyBtn}
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>

@@ -880,7 +880,15 @@ function YandexPickerMap({
     return () => {
       cancelled = true;
       if (mapInstanceRef.current) {
-        mapInstanceRef.current.destroy();
+        // MUHIM: Yandex SDK'ning ba'zi versiyalarida destroy() ichki
+        // event-listenerlarni tozalashda xato tashlashi mumkin (masalan
+        // "events.removeAll is not a function") — bu try/catch bo'lmasa
+        // butun React ilovasini yiqitib, oq ekran qoldiradi.
+        try {
+          mapInstanceRef.current.destroy();
+        } catch (err) {
+          console.error("Yandex xaritani tozalashda xato:", err);
+        }
         mapInstanceRef.current = null;
       }
     };
@@ -946,7 +954,19 @@ function YandexAddressSearch({
     return () => {
       cancelled = true;
       if (suggestViewRef.current) {
-        suggestViewRef.current.events.removeAll("select");
+        // MUHIM: xuddi shu sabab bilan (yuqoridagi izohga qarang) — SuggestView
+        // yopilganda ham SDK ichki tozalash xato tashlab, ilovani yiqitishi
+        // mumkin. destroy() bo'lsa shuni, bo'lmasa xavfsiz removeAll'ni sinaymiz.
+        try {
+          if (typeof suggestViewRef.current.destroy === "function") {
+            suggestViewRef.current.destroy();
+          } else if (suggestViewRef.current.events && typeof suggestViewRef.current.events.removeAll === "function") {
+            suggestViewRef.current.events.removeAll("select");
+          }
+        } catch (err) {
+          console.error("Yandex qidiruv vidjetini tozalashda xato:", err);
+        }
+        suggestViewRef.current = null;
       }
     };
   }, []);
@@ -1025,6 +1045,11 @@ const DISTRICTS: Record<string, string[]> = {
   "Qoraqalpog'iston": ["Nukus shahri", "Amudaryo", "Beruniy", "Chimboy", "Ellikqal'a", "Kegeyli", "Mo'ynoq", "Nukus tumani", "Qonliko'l", "Qo'ng'irot", "Qorao'zak", "Shumanay", "Taxtako'pir", "To'rtko'l", "Xo'jayli", "Taxiatosh", "Bo'zatov"]
 };
 const REGIONS = Object.keys(DISTRICTS);
+
+// Mijoz qaysi do'kon/filial orqali buyurtma berayotganini belgilaydi —
+// agar do'konga tashrif buyurib, o'sha yerdan onlayn buyurtma bersa, shu
+// do'kon tanlanadi; uydan/hech qayerga bormasdan buyurtma bersa "Online".
+const ORDER_SOURCE_OPTIONS = ["150-151 OSCAR", "10-36 X-TRA", "SHOWROOM", "Online"];
 
 // Custom Select Component
 interface CustomSelectProps {
@@ -1172,6 +1197,7 @@ export default function Checkout() {
   const [paymentProvider, setPaymentProvider] = useState<"payme" | null>(null);
 
   const [deliveryMethod, setDeliveryMethod] = useState<"delivery" | "pickup">("delivery");
+  const [orderSource, setOrderSource] = useState("");
   const [deliveryFeeData, setDeliveryFeeData] = useState<{ fee: number; isFree: boolean; reason: string; distanceKm: number | null }>({ fee: 0, isFree: false, reason: '', distanceKm: null });
 
   const deliveryFeeUZS = deliveryMethod === 'pickup' ? 0 : deliveryFeeData.fee;
@@ -1401,6 +1427,11 @@ export default function Checkout() {
       return;
     }
 
+    if (!orderSource) {
+      alert("Iltimos, qaysi do'kon orqali buyurtma berayotganingizni tanlang.");
+      return;
+    }
+
     if (!isVip && paymentMethod === "card" && !paymentProvider) {
       alert("Iltimos, to'lov tizimini tanlang.");
       return;
@@ -1429,6 +1460,7 @@ export default function Checkout() {
       totalUSD: finalTotalUSDWithDelivery,
       totalUZS: finalTotalUZSWithDelivery,
       deliveryMethod,
+      orderSource,
       deliveryFee: deliveryFeeUZS,
       deliveryFeeUsd: deliveryFeeUSD,
       distanceKm: deliveryMethod === 'pickup' ? null : (deliveryFeeData.distanceKm ? Number(deliveryFeeData.distanceKm.toFixed(1)) : null),
@@ -1790,12 +1822,27 @@ export default function Checkout() {
             </div>
           )}
 
+          {/* Qaysi do'kon orqali buyurtma berayotgani */}
+          <div className="bg-white p-5 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-50 space-y-3">
+            <h3 className="font-semibold text-slate-800">Qaysi do'kon orqali buyurtma berayapsiz?</h3>
+            <p className="text-xs text-slate-500 leading-snug">
+              Agar do'konimizga tashrif buyurib, o'sha yerdan shu ilova orqali buyurtma bersangiz — o'sha do'konni tanlang.
+              Agar uydan yoki hech qayerga bormasdan buyurtma bersangiz — "Online"ni tanlang.
+            </p>
+            <CustomSelect
+              value={orderSource}
+              onChange={setOrderSource}
+              options={ORDER_SOURCE_OPTIONS}
+              placeholder="Do'konni tanlang"
+            />
+          </div>
+
           {/* Submit Button */}
           <div className="fixed bottom-[calc(4rem+env(safe-area-inset-bottom))] left-0 right-0 p-4 bg-white/95 backdrop-blur-sm border-t pb-8 z-30 max-w-2xl mx-auto shadow-[0_-10px_40px_rgb(0,0,0,0.05)]">
             <Button
               type="submit"
               className="w-full h-14 rounded-2xl text-lg font-bold active:scale-95 transition-all flex items-center justify-center gap-2 overflow-hidden relative"
-              disabled={checkoutStep !== "idle" || items.length === 0 || (deliveryMethod === 'delivery' && !formData.location.lat) || (!isVip && paymentMethod === "card" && !paymentProvider)}
+              disabled={checkoutStep !== "idle" || items.length === 0 || (deliveryMethod === 'delivery' && !formData.location.lat) || (!isVip && paymentMethod === "card" && !paymentProvider) || !orderSource}
             >
               {checkoutStep !== "idle" && (
                 <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">

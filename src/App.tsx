@@ -16,6 +16,7 @@ import { CategoryDetail } from "@/pages/CategoryDetail";
 import { AllProducts } from "@/pages/AllProducts";
 import { SubcategoryList } from "@/pages/SubcategoryList";
 import { Profile } from "@/pages/Profile";
+import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 
 // Sahifalar orasida o'tishda scroll pozitsiyasi avvalgi sahifadan
 // meros bo'lib qolardi (masalan uzun ro'yxatni pastga scroll qilib,
@@ -80,19 +81,21 @@ function App() {
   return (
     <div className="w-full">
       <ScrollToTop />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/categories" element={<Categories />} />
-        <Route path="/categories/:topCategory" element={<SubcategoryList />} />
-        <Route path="/all-products" element={<AllProducts />} />
-        <Route path="/category/:categoryKey" element={<CategoryDetail />} />
-        <Route path="/product/:id" element={<ProductDetail />} />
-        <Route path="/cart" element={<Cart />} />
-        <Route path="/checkout" element={<Checkout />} />
-        <Route path="/location" element={<LocationPage />} />
-        <Route path="/signin" element={<SignIn />} />
-        <Route path="/profile" element={<Profile />} />
-      </Routes>
+      <ErrorBoundary>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/categories" element={<Categories />} />
+          <Route path="/categories/:topCategory" element={<SubcategoryList />} />
+          <Route path="/all-products" element={<AllProducts />} />
+          <Route path="/category/:categoryKey" element={<CategoryDetail />} />
+          <Route path="/product/:id" element={<ProductDetail />} />
+          <Route path="/cart" element={<Cart />} />
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/location" element={<LocationPage />} />
+          <Route path="/signin" element={<SignIn />} />
+          <Route path="/profile" element={<Profile />} />
+        </Routes>
+      </ErrorBoundary>
       <BottomNav />
     </div>
   );

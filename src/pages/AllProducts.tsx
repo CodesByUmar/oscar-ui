@@ -13,6 +13,8 @@ export function AllProducts() {
     const t = useI18nStore((s) => s.t);
     const lang = useI18nStore((s) => s.lang);
     const [searchQuery, setSearchQuery] = useState("");
+    const [selectedTopCategory, setSelectedTopCategory] = useState<string | null>(null);
+    const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
     const trimmedQuery = searchQuery.trim();
     const queryVariants = [trimmedQuery.toLowerCase()];
@@ -20,7 +22,36 @@ export function AllProducts() {
         queryVariants.push(cyrillicToLatinUz(trimmedQuery).toLowerCase());
     }
 
+    // Top-kategoriya tugmalari — mavjud mahsulotlardan dinamik yig'iladi,
+    // ko'rsatiladigan nom (topCategory) birinchi uchragan mahsulotdan olinadi.
+    const topCategoryNameMap: Record<string, string> = {};
+    products.forEach((p) => {
+        if (p.topCategoryKey && !topCategoryNameMap[p.topCategoryKey]) {
+            topCategoryNameMap[p.topCategoryKey] = p.topCategory;
+        }
+    });
+    const topCategoryKeys = Array.from(new Set(products.map((p) => p.topCategoryKey))).filter(Boolean);
+
+    // Sub-kategoriya tugmalari — faqat tanlangan top-kategoriya ichidagilar.
+    const productsInTopCategory = selectedTopCategory
+        ? products.filter((p) => p.topCategoryKey === selectedTopCategory)
+        : [];
+    const subCategoryNameMap: Record<string, string> = {};
+    productsInTopCategory.forEach((p) => {
+        if (p.categoryKey && !subCategoryNameMap[p.categoryKey]) {
+            subCategoryNameMap[p.categoryKey] = p.category;
+        }
+    });
+    const subCategoryKeys = Array.from(new Set(productsInTopCategory.map((p) => p.categoryKey))).filter(Boolean);
+
+    const handleSelectTopCategory = (key: string | null) => {
+        setSelectedTopCategory(key);
+        setSelectedCategory(null); // top-kategoriya almashsa, sub-tanlov ham tozalanadi
+    };
+
     const filteredProducts = products.filter((p) => {
+        if (selectedTopCategory && p.topCategoryKey !== selectedTopCategory) return false;
+        if (selectedCategory && p.categoryKey !== selectedCategory) return false;
         if (trimmedQuery === "") return true;
         const fields = [p.name, p.nameI18n?.uz, p.nameI18n?.ru, p.nameI18n?.en, p.description, p.descriptionI18n?.uz]
             .filter(Boolean)
@@ -65,6 +96,62 @@ export function AllProducts() {
                             </button>
                         )}
                     </div>
+
+                    {topCategoryKeys.length > 0 && (
+                        <div className="flex gap-2 overflow-x-auto mt-3 pb-1 -mx-4 px-4 no-scrollbar">
+                            <button
+                                onClick={() => handleSelectTopCategory(null)}
+                                className={`shrink-0 px-4 py-2 rounded-xl text-sm font-semibold transition-all active:scale-95 ${
+                                    selectedTopCategory === null
+                                        ? "bg-primary text-white shadow-sm"
+                                        : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                                }`}
+                            >
+                                {t('home.all')}
+                            </button>
+                            {topCategoryKeys.map((key) => (
+                                <button
+                                    key={key}
+                                    onClick={() => handleSelectTopCategory(key)}
+                                    className={`shrink-0 px-4 py-2 rounded-xl text-sm font-semibold transition-all active:scale-95 whitespace-nowrap ${
+                                        selectedTopCategory === key
+                                            ? "bg-primary text-white shadow-sm"
+                                            : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                                    }`}
+                                >
+                                    {topCategoryNameMap[key] || key}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+
+                    {selectedTopCategory && subCategoryKeys.length > 0 && (
+                        <div className="flex gap-2 overflow-x-auto mt-2 pb-1 -mx-4 px-4 no-scrollbar">
+                            <button
+                                onClick={() => setSelectedCategory(null)}
+                                className={`shrink-0 px-3.5 py-1.5 rounded-lg text-xs font-semibold border transition-all active:scale-95 ${
+                                    selectedCategory === null
+                                        ? "bg-primary/10 text-primary border-primary/30"
+                                        : "bg-white text-slate-500 border-slate-200 hover:bg-slate-50"
+                                }`}
+                            >
+                                {t('home.all')}
+                            </button>
+                            {subCategoryKeys.map((key) => (
+                                <button
+                                    key={key}
+                                    onClick={() => setSelectedCategory(key)}
+                                    className={`shrink-0 px-3.5 py-1.5 rounded-lg text-xs font-semibold border transition-all active:scale-95 whitespace-nowrap ${
+                                        selectedCategory === key
+                                            ? "bg-primary/10 text-primary border-primary/30"
+                                            : "bg-white text-slate-500 border-slate-200 hover:bg-slate-50"
+                                    }`}
+                                >
+                                    {subCategoryNameMap[key] || key}
+                                </button>
+                            ))}
+                        </div>
+                    )}
                 </div>
             </div>
 

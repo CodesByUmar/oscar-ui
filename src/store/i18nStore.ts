@@ -160,6 +160,8 @@ const translations: Record<Lang, Record<string, string>> = {
     'signin.error': 'Login yoki parol xato',
     'signin.loading': 'Kirish...',
     'signin.button': 'Kirish',
+    'signin.help_text': "Kira olmayapsizmi? Adminga murojaat qiling yoki yordam so'rovidan foydalaning.",
+    'signin.help_btn': 'Yordam va qo\'llab-quvvatlash',
   },
 
   ru: {
@@ -305,6 +307,8 @@ const translations: Record<Lang, Record<string, string>> = {
     'signin.error': 'Неверный логин или пароль',
     'signin.loading': 'Вход...',
     'signin.button': 'Войти',
+    'signin.help_text': 'Не можете войти? Обратитесь к администратору или воспользуйтесь помощью.',
+    'signin.help_btn': 'Помощь и поддержка',
   },
 
   en: {
@@ -450,6 +454,8 @@ const translations: Record<Lang, Record<string, string>> = {
     'signin.error': 'Invalid login or password',
     'signin.loading': 'Signing in...',
     'signin.button': 'Sign in',
+    'signin.help_text': "Can't sign in? Contact an admin or use the support option.",
+    'signin.help_btn': 'Help and support',
   },
 };
 

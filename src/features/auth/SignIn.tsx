@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ChevronLeft, LogIn, Crown } from "lucide-react";
+import { ChevronLeft, LogIn, Crown, MessageCircle } from "lucide-react";
 import { useI18nStore } from "@/store/i18nStore";
 
 export function SignIn() {
@@ -85,8 +85,24 @@ export function SignIn() {
                             </div>
 
                             {error && (
-                                <div className="p-3 bg-red-50 text-red-600 rounded-xl text-sm text-center">
-                                    ⚠ {error}
+                                <div className="space-y-3">
+                                    <div className="p-3 bg-red-50 text-red-600 rounded-xl text-sm text-center">
+                                        ⚠ {error}
+                                    </div>
+                                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center gap-3">
+                                        <div className="w-9 h-9 shrink-0 bg-[#0088cc]/10 text-[#0088cc] rounded-full flex items-center justify-center">
+                                            <MessageCircle className="w-4 h-4" />
+                                        </div>
+                                        <p className="text-xs text-slate-600 flex-1">{t('signin.help_text')}</p>
+                                    </div>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={() => navigate('/location')}
+                                        className="w-full h-11 rounded-xl text-sm font-bold border-2 border-slate-200 text-slate-700 hover:bg-slate-50"
+                                    >
+                                        {t('signin.help_btn')}
+                                    </Button>
                                 </div>
                             )}
 

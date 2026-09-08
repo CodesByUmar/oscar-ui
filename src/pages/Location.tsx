@@ -32,12 +32,19 @@ const FALLBACK_STORES: StoreLocation[] = [
 function openYandexNavigation(lat: number, lng: number) {
   const webUrl = `https://yandex.uz/maps/?rtext=~${lat},${lng}&rtt=auto`;
   const appUrl = `yandexnavi://build_route_on_map?lat_to=${lat}&lon_to=${lng}`;
+  const tg = (window as any).Telegram?.WebApp;
 
+  // MUHIM: fallback kechiktirilgan (setTimeout ichida) chaqirilgani uchun
+  // brauzer uni "foydalanuvchi bevosita bosgan" deb hisoblamaydi va
+  // window.open()'ni ovozsiz bloklaydi — shu sabab bu yerda window.open()
+  // ISHLATILMAYDI, faqat joriy oynani (yoki Telegram'ning o'z ochish
+  // funksiyasini) qayta yo'naltiramiz, bu hech qachon bloklanmaydi.
   let didFallback = false;
   const fallbackToWeb = () => {
     if (didFallback) return;
     didFallback = true;
-    openExternalLink(webUrl);
+    if (tg?.openLink) tg.openLink(webUrl);
+    else window.location.href = webUrl;
   };
 
   const timer = setTimeout(fallbackToWeb, 1200);

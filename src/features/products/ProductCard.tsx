@@ -82,6 +82,7 @@ export function ProductCard({ product }: ProductCardProps) {
           <img
             src={displayImage || undefined}
             alt={displayTitle}
+            loading="lazy"
             className="object-contain h-[150px] sm:h-full w-full transition-transform duration-500 group-hover:scale-110 z-0"
             onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.classList.remove('hidden') }}
           />

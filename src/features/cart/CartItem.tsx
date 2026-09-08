@@ -30,6 +30,7 @@ export function CartItem({ item }: CartItemProps) {
         <img
           src={item.image || undefined}
           alt={item.name}
+          loading="lazy"
           className="object-contain w-full h-full drop-shadow-sm"
           onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.classList.remove('hidden') }}
         />

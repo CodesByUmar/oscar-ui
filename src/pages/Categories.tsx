@@ -81,6 +81,7 @@ export function Categories() {
                     <img
                       src={topImageMap[topCategoryKey]}
                       alt={topNameMap[topCategoryKey] || topCategoryKey}
+                      loading="lazy"
                       className="w-full h-full object-contain"
                     />
                   ) : (

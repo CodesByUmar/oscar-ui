@@ -77,6 +77,7 @@ export function SubcategoryList() {
                                         <img
                                             src={subImageMap[catKey]}
                                             alt={catKey}
+                                            loading="lazy"
                                             className="w-full h-full object-contain"
                                         />
                                     ) : (

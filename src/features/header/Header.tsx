@@ -1,12 +1,31 @@
 // src/features/header/Header.tsx
-import { useState } from "react";
-import { Bell, Search, LogOut, LogIn, Phone, Copy, Check, Crown } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Bell, Search, LogOut, LogIn, Phone, Copy, Check, Crown, Send } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import { useNotificationStore } from "@/store/notificationStore";
 import { NotificationModal } from "@/features/notifications/NotificationModal";
 import { SearchModal } from "@/features/search/SearchModal";
 import { useI18nStore } from "@/store/i18nStore";
 import { useAuth } from "@/context/AuthContext";  // ✅ to'g'ri import
+
+interface StoreContact {
+  id: string;
+  name: string;
+  phone: string;
+  telegramUsername?: string;
+  order?: number;
+}
+
+// Admin bot orqali tahrirlanadigan haqiqiy manba topilmaguncha (yoki
+// tarmoq xatosida) ko'rsatiladigan zaxira ro'yxat — hech qachon bo'sh
+// oyna ko'rinmasligi uchun.
+const FALLBACK_STORES: StoreContact[] = [
+  { id: "oscar_150", name: "150-151 OSCAR", phone: "+998900471150" },
+  { id: "xtra_1036", name: "10-36 X-TRA", phone: "+998774441036" },
+  { id: "showroom", name: "SHOWROOM", phone: "+998981110809" },
+];
 
 export function Header() {
   const navigate = useNavigate();
@@ -27,12 +46,26 @@ export function Header() {
     copiedBtn: lang === 'uz' ? "Nusxa olindi!" : (lang === 'ru' ? "Скопировано!" : "Copied!"),
   };
 
-  // Har bir do'kon/filial uchun alohida qo'ng'iroq raqami.
-  const STORES = [
-    { name: "150-151 OSCAR", phone: "+998900471150" },
-    { name: "10-36 X-TRA", phone: "+998774441036" },
-    { name: "SHOWROOM", phone: "+998946046667" },
-  ];
+  // Har bir do'kon/filial uchun alohida qo'ng'iroq raqami va Telegram
+  // kontakti — admin bot orqali ("🏪 Do'kon kontaktlari") tahrirlanadi.
+  // Oyna ochilgandagina bir marta o'qiladi (doim ochiq tinglovchi shart
+  // emas — bu ma'lumot kamdan-kam o'zgaradi).
+  const [stores, setStores] = useState<StoreContact[]>(FALLBACK_STORES);
+  useEffect(() => {
+    if (!showCallCenter) return;
+    let cancelled = false;
+    getDocs(collection(db, "storeContacts")).then((snap) => {
+      if (cancelled || snap.empty) return;
+      const list = snap.docs
+        .map((d) => ({ id: d.id, ...(d.data() as Omit<StoreContact, 'id'>) }))
+        .filter((s) => s.phone)
+        .sort((a, b) => (a.order || 0) - (b.order || 0));
+      if (list.length > 0) setStores(list);
+    }).catch((error) => {
+      console.error("Do'kon kontaktlarini yuklashda xato:", error);
+    });
+    return () => { cancelled = true; };
+  }, [showCallCenter]);
 
   const [copiedPhone, setCopiedPhone] = useState<string | null>(null);
   const handleCopyPhone = async (phone: string) => {
@@ -203,11 +236,11 @@ export function Header() {
             </div>
             <h3 className="text-sm font-semibold text-slate-500 mb-4 text-center">{callCenterText.label}</h3>
             <div className="space-y-3">
-              {STORES.map((store) => {
+              {stores.map((store) => {
                 const telHref = `tel:${store.phone}`;
                 const isCopied = copiedPhone === store.phone;
                 return (
-                  <div key={store.phone} className="rounded-xl border border-slate-100 p-3">
+                  <div key={store.id} className="rounded-xl border border-slate-100 p-3">
                     <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-0.5">{store.name}</p>
                     <a
                       href={telHref}
@@ -239,6 +272,16 @@ export function Header() {
                           </>
                         )}
                       </button>
+                      {store.telegramUsername && (
+                        <a
+                          href={`https://t.me/${store.telegramUsername}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-9 h-9 shrink-0 rounded-lg bg-[#0088cc]/10 text-[#0088cc] hover:bg-[#0088cc]/20 flex items-center justify-center transition-colors"
+                        >
+                          <Send className="w-3.5 h-3.5" />
+                        </a>
+                      )}
                     </div>
                   </div>
                 );

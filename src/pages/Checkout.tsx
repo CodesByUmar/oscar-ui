@@ -1500,8 +1500,6 @@ export default function Checkout() {
           // MUHIM: checkout.paycom.uz (to'liq Merchant API) hisobimizda hali
           // faol emas ("Поставщик не найден или заблокирован" xatosi berdi) —
           // hozircha faqat QR-chekdagi statik "fallback" havolasi ishlaydi.
-          // Shuning uchun mijozga summani oldindan ko'rsatamiz.
-          alert(`Diqqat: Payme sahifasida ${formatUZS(finalTotalUZSWithDelivery)} so'm summasini kiriting/tasdiqlang.`);
           openExternalLink(`https://payme.uz/fallback/merchant/?id=${PAYME_MERCHANT_ID}`);
         }
       }

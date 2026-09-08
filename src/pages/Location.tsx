@@ -39,6 +39,14 @@ function openYandexNavigation(lat: number, lng: number) {
   // window.open()'ni ovozsiz bloklaydi — shu sabab bu yerda window.open()
   // ISHLATILMAYDI, faqat joriy oynani (yoki Telegram'ning o'z ochish
   // funksiyasini) qayta yo'naltiramiz, bu hech qachon bloklanmaydi.
+  //
+  // "blur" hodisasi orqali "ilova ochildi, fallback shart emas" deb
+  // aniqlashga urinish ATAYLAB ISHLATILMAYDI — jonli sinovda noma'lum
+  // sxema (yandexnavi://) ga o'tishga urinishning o'zi ba'zi brauzerlarda
+  // soxta "blur" hodisasini keltirib chiqarar ekan, bu esa fallback'ni
+  // butunlay bekor qilib, tugma hech narsa qilmay qolib ketishiga olib
+  // kelardi. Ilova haqiqatan ochilsa, foydalanuvchi sahifadan chiqib
+  // ketadi — fallback fonda ishga tushib qolishi zararsiz.
   let didFallback = false;
   const fallbackToWeb = () => {
     if (didFallback) return;
@@ -47,13 +55,11 @@ function openYandexNavigation(lat: number, lng: number) {
     else window.location.href = webUrl;
   };
 
-  const timer = setTimeout(fallbackToWeb, 1200);
-  window.addEventListener("blur", () => { didFallback = true; clearTimeout(timer); }, { once: true });
+  setTimeout(fallbackToWeb, 1200);
 
   try {
     window.location.href = appUrl;
   } catch {
-    clearTimeout(timer);
     fallbackToWeb();
   }
 }

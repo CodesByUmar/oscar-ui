@@ -98,10 +98,10 @@ export function AllProducts() {
                     </div>
 
                     {topCategoryKeys.length > 0 && (
-                        <div className="flex gap-2 overflow-x-auto mt-3 pb-1 -mx-4 px-4 no-scrollbar">
+                        <div className="flex flex-wrap gap-2 mt-3">
                             <button
                                 onClick={() => handleSelectTopCategory(null)}
-                                className={`shrink-0 px-4 py-2 rounded-xl text-sm font-semibold transition-all active:scale-95 ${
+                                className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all active:scale-95 ${
                                     selectedTopCategory === null
                                         ? "bg-primary text-white shadow-sm"
                                         : "bg-slate-100 text-slate-600 hover:bg-slate-200"
@@ -113,7 +113,7 @@ export function AllProducts() {
                                 <button
                                     key={key}
                                     onClick={() => handleSelectTopCategory(key)}
-                                    className={`shrink-0 px-4 py-2 rounded-xl text-sm font-semibold transition-all active:scale-95 whitespace-nowrap ${
+                                    className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all active:scale-95 whitespace-nowrap ${
                                         selectedTopCategory === key
                                             ? "bg-primary text-white shadow-sm"
                                             : "bg-slate-100 text-slate-600 hover:bg-slate-200"
@@ -126,10 +126,10 @@ export function AllProducts() {
                     )}
 
                     {selectedTopCategory && subCategoryKeys.length > 0 && (
-                        <div className="flex gap-2 overflow-x-auto mt-2 pb-1 -mx-4 px-4 no-scrollbar">
+                        <div className="flex flex-wrap gap-2 mt-2">
                             <button
                                 onClick={() => setSelectedCategory(null)}
-                                className={`shrink-0 px-3.5 py-1.5 rounded-lg text-xs font-semibold border transition-all active:scale-95 ${
+                                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold border transition-all active:scale-95 ${
                                     selectedCategory === null
                                         ? "bg-primary/10 text-primary border-primary/30"
                                         : "bg-white text-slate-500 border-slate-200 hover:bg-slate-50"
@@ -141,7 +141,7 @@ export function AllProducts() {
                                 <button
                                     key={key}
                                     onClick={() => setSelectedCategory(key)}
-                                    className={`shrink-0 px-3.5 py-1.5 rounded-lg text-xs font-semibold border transition-all active:scale-95 whitespace-nowrap ${
+                                    className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold border transition-all active:scale-95 whitespace-nowrap ${
                                         selectedCategory === key
                                             ? "bg-primary/10 text-primary border-primary/30"
                                             : "bg-white text-slate-500 border-slate-200 hover:bg-slate-50"

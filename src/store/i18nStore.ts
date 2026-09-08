@@ -112,6 +112,7 @@ const translations: Record<Lang, Record<string, string>> = {
     'location.support_desc': 'Barcha savollaringizga Telegram orqali javob beramiz.',
     'location.support_title': 'Savollaringiz bormi?',
     'location.support_btn': 'Yordam va qo\'llab-quvvatlash',
+    'location.get_directions': 'Yo\'nalish olish',
 
     // Profile
     'profile.title': 'Shaxsiy profil',
@@ -257,6 +258,7 @@ const translations: Record<Lang, Record<string, string>> = {
     'location.support_desc': 'Мы ответим на все ваши вопросы в Telegram.',
     'location.support_title': 'Есть вопросы?',
     'location.support_btn': 'Помощь и поддержка',
+    'location.get_directions': 'Проложить маршрут',
 
     'profile.title': 'Профиль',
     'profile.coming_soon': 'Этот раздел будет полностью готов на днях в стиле Antigravity UI!',
@@ -401,6 +403,7 @@ const translations: Record<Lang, Record<string, string>> = {
     'location.support_desc': 'We will answer all your questions in Telegram.',
     'location.support_title': 'Have questions?',
     'location.support_btn': 'Help and support',
+    'location.get_directions': 'Get directions',
 
     'profile.title': 'Profile',
     'profile.coming_soon': 'This section will be fully ready in the coming days in the style of Antigravity UI!',

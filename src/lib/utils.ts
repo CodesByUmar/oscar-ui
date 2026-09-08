@@ -16,3 +16,17 @@ export function formatUZS(value: number, separator: string = " "): string {
   const withSeparators = digits.replace(/\B(?=(\d{3})+(?!\d))/g, separator);
   return `${sign}${withSeparators}`;
 }
+
+// MUHIM: Telegram Mini App ichida oddiy window.open("_blank") ko'pincha
+// jim (silent) bloklanadi — WebView popup'larni ruxsatsiz to'xtatadi,
+// ayniqsa await'lardan keyin chaqirilganda (foydalanuvchi gesture
+// zanjiri uzilgan hisoblanadi). Telegram'ning o'z Telegram.WebApp.openLink()
+// funksiyasi esa buni to'g'ri, tizim brauzerida ochadi.
+export function openExternalLink(url: string) {
+  const tg = (window as any).Telegram?.WebApp;
+  if (tg?.openLink) {
+    tg.openLink(url);
+  } else {
+    window.open(url, "_blank");
+  }
+}

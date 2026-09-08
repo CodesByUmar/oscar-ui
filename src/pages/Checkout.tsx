@@ -824,7 +824,7 @@
 // src/pages/Checkout
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { formatUZS } from "@/lib/utils";
+import { formatUZS, openExternalLink } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, Loader2, CheckCircle2, MapPin, ChevronDown, Navigation, X, Truck, Store, Crown, Search } from "lucide-react";
 import { useCartStore } from "@/store/cartStore";
@@ -991,20 +991,6 @@ function YandexAddressSearch({
 
 // Haqiqiy do'kon QR-chekidan olingan Payme merchant ID.
 const PAYME_MERCHANT_ID = "660d234690823bcdf98bebe5";
-
-// MUHIM: Telegram Mini App ichida oddiy window.open("_blank") ko'pincha
-// jim (silent) bloklanadi — WebView popup'larni ruxsatsiz to'xtatadi,
-// ayniqsa await'lardan keyin chaqirilganda (foydalanuvchi gesture
-// zanjiri uzilgan hisoblanadi). Telegram'ning o'z Telegram.WebApp.openLink()
-// funksiyasi esa buni to'g'ri, tizim brauzerida ochadi.
-function openExternalLink(url: string) {
-  const tg = (window as any).Telegram?.WebApp;
-  if (tg?.openLink) {
-    tg.openLink(url);
-  } else {
-    window.open(url, "_blank");
-  }
-}
 
 // Phone formatter
 const formatPhoneNumber = (value: string) => {
